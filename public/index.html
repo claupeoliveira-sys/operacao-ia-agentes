@@ -1,80 +1,56 @@
-<!-- Substitua o trecho do botão e loader por este -->
-<div class="actions" style="flex-direction: column; gap: 15px;">
-    <button class="btn-main" id="btn-gerar" onclick="gerar()">
-        <span id="btn-text">🚀 Iniciar Esteira de Agentes</span>
-    </button>
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const express = require("express");
+const app = express();
+app.use(express.json());
 
-    <!-- Barra de Status Visual -->
-    <div id="status-container" style="display:none; width: 100%; background: #e2e8f0; border-radius: 8px; padding: 15px; box-sizing: border-box;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <span id="status-step" style="font-weight: bold; color: #2563eb; font-size: 14px;">Iniciando...</span>
-            <span id="status-percent" style="font-weight: bold; color: #64748b; font-size: 14px;">0%</span>
-        </div>
-        <div style="width: 100%; background: #cbd5e1; height: 8px; border-radius: 4px;">
-            <div id="status-bar" style="width: 0%; background: #2563eb; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
-        </div>
-    </div>
+const delay = ms => new Promise(res => setTimeout(res, ms));
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1beta' });
 
-    <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório Consolidado</button>
-</div>
+app.post("/api/processar", async (req, res) => {
+    const { requisito, modelo } = req.body;
+    const modeloFinal = modelo || "gemini-2.5-flash";
 
-<script>
-    // Nova função para atualizar o status na tela
-    function atualizarStatus(step, percent) {
-        document.getElementById('status-container').style.display = 'block';
-        document.getElementById('status-step').innerText = step;
-        document.getElementById('status-bar').style.width = percent + '%';
-        document.getElementById('status-percent').innerText = percent + '%';
+    console.log(`[${new Date().toISOString()}] 🚀 Iniciando Processamento: ${modeloFinal}`);
+
+    try {
+        const model = genAI.getGenerativeModel({ model: modeloFinal });
+
+        // AGENTE 1: PO (DOCUMENTAÇÃO GHERKIN)
+        console.log("-> Operando: Agente PO");
+        const resPO = await model.generateContent(`Aja como PO Sênior. Forneça EXCLUSIVAMENTE Critérios de Aceite Gherkin para: ${requisito}. Proibido introduções.`);
+        const textoPO = resPO.response.text();
+        await delay(3000);
+
+        // AGENTE 2: QA (REPOSITÓRIO DE TESTES)
+        console.log("-> Operando: Agente QA");
+        const resQA = await model.generateContent(`Aja como QA Lead. Gere APENAS Casos de Teste UI com Steps e Resultados Esperados baseados em: ${textoPO}. Proibido saudações.`);
+        const textoQA = resQA.response.text();
+        await delay(3000);
+
+        // AGENTE 3: RM (RELATÓRIO DE IMPACTO)
+        console.log("-> Operando: Agente RM");
+        const resRM = await model.generateContent(`Aja como Release Manager. Forneça EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Sem textos introdutórios. Base: ${textoPO} e ${textoQA}`);
+        const textoRM = resRM.response.text();
+        await delay(3000);
+
+        // AGENTE 4: SIZING (CAPACITY PLANNING)
+        console.log("-> Operando: Agente Sizing");
+        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS tabela de esforço (H/M e Perfis), com 15% Gestão e 10% Buffer. Foco em otimização operacional. Base: ${textoQA}`);
+        const textoSizing = resSizing.response.text();
+        await delay(3000);
+
+        // AGENTE 5: WAR ROOM (COMITÊ DE RISCO)
+        console.log("-> Operando: Agente War Room");
+        const resWar = await model.generateContent(`Aja como Moderador Técnico. Gere diálogo de 4 falas entre as áreas sobre Riscos e Veredito GO/NO-GO. Base: ${textoPO}, ${textoQA} e ${textoSizing}`);
+        const textoWarRoom = resWar.response.text();
+
+        console.log(`✅ Sucesso total.`);
+        res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
+
+    } catch (error) {
+        console.error("❌ Erro de Processamento:", error.message);
+        res.status(500).json({ error: error.message });
     }
+});
 
-    async function gerar() {
-        const req = document.getElementById('requisito').value;
-        const mod = document.getElementById('modelo').value;
-        const btn = document.getElementById('btn-gerar');
-        const pdf = document.getElementById('btn-pdf');
-
-        if(!req) return alert("Insira o requisito!");
-
-        btn.disabled = true;
-        pdf.style.display = 'none';
-
-        // Início da régua de status
-        atualizarStatus("Mapeando Requisitos (PO)...", 10);
-
-        try {
-            // Simulando progresso enquanto espera a resposta longa do backend
-            // Já que o fetch é uma promessa única, vamos quebrar o feedback visual
-            const r = await fetch('/api/processar', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ requisito: req, modelo: mod })
-            });
-
-            // Como o backend é sequencial, atualizamos após a resposta
-            // Se quiser algo mais "vivo", o backend precisaria de WebSockets, 
-            // mas via HTTP normal, o truque é atualizar em saltos:
-            atualizarStatus("Validando Casos de Teste (QA)...", 40);
-
-            const d = await r.json();
-            if(!r.ok) throw new Error(d.error);
-
-            atualizarStatus("Calculando Sizing e Riscos...", 80);
-
-            dadosPdf = d;
-            document.getElementById('po').innerText = d.po;
-            document.getElementById('qa').innerText = d.qa;
-            document.getElementById('rm').innerText = d.rm;
-            document.getElementById('sizing').innerText = d.sizing;
-            document.getElementById('warroom').innerText = d.warroom;
-
-            atualizarStatus("Processamento Concluído!", 100);
-            pdf.style.display = 'block';
-
-        } catch (err) { 
-            alert("ERRO: " + err.message); 
-            atualizarStatus("Erro no processamento", 0);
-        } finally { 
-            btn.disabled = false; 
-        }
-    }
-</script>
+module.exports = app;
