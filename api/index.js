@@ -1,30 +1,31 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const express = require("express");
 const app = express();
-
 app.use(express.json());
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.post("/api/processar", async (req, res) => {
     try {
         const { requisito } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+
+        if (!apiKey) throw new Error("API Key não configurada na Vercel.");
+        if (!requisito) throw new Error("Requisito não fornecido.");
+
+        const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-        // PROMPT AGENTE PO
-        const promptPO = `Aja como PO Sênior. Gere APENAS Critérios de Aceite em Gherkin. Sem introduções. Requisito: ${requisito}`;
-        const resultPO = await model.generateContent(promptPO);
-        const textoPO = resultPO.response.text();
+        // Execução em paralelo para ganhar velocidade
+        const [resPO, resQA] = await Promise.all([
+            model.generateContent(`Aja como PO Sênior. Gere APENAS Critérios de Aceite em Gherkin. Sem introduções. Requisito: ${requisito}`),
+            model.generateContent(`Aja como QA Sênior. Gere APENAS Plano de Testes (ID, Passo, Resultado) baseado no requisito: ${requisito}`)
+        ]);
 
-        // PROMPT AGENTE QA (Lê o PO)
-        const promptQA = `Aja como QA Sênior. Gere APENAS Plano de Testes (ID, Passo, Resultado) baseado nisso: ${textoPO}`;
-        const resultQA = await model.generateContent(promptQA);
-        const textoQA = resultQA.response.text();
+        const textoPO = resPO.response.text();
+        const textoQA = resQA.response.text();
 
-        // PROMPT AGENTE SIZING
-        const promptSizing = `Aja como Sizing Manager. Gere estimativa de horas, perfis e níveis (Jr/Pl/Sr). Adicione 15% Gestão e 10% Garantia. Base: ${textoPO} e ${textoQA}`;
-        const resultSizing = await model.generateContent(promptSizing);
-        const textoSizing = resultSizing.response.text();
+        // Terceiro agente (Sizing) usa o contexto dos dois anteriores
+        const resSizing = await model.generateContent(`Aja como Sizing Manager. Gere estimativa de horas, perfis (Jr/Pl/Sr). Adicione 15% Gestão e 10% Garantia. Base técnico: ${textoPO} e ${textoQA}`);
+        const textoSizing = resSizing.response.text();
 
         res.json({ po: textoPO, qa: textoQA, sizing: textoSizing });
     } catch (error) {
