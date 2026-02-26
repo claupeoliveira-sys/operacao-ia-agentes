@@ -3,16 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>Sizing & Operação IA - Claupe Oliveira</title>
+    <title>Sizing & Operação IA - Exportação PDF</title>
+    <!-- Bibliotecas para PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-
-        .selector-box { margin-bottom: 20px; padding: 10px; background: #f1f5f9; border-radius: 8px; border: 1px solid #cbd5e1; }
-        select { padding: 8px; border-radius: 5px; border: 1px solid #cbd5e1; font-size: 14px; width: 100%; color: #334155; }
-
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 5px; }
+        .input-text { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: monospace; }
         textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; }
-        .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+
+        .actions { display: flex; gap: 10px; }
+        .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 2; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; text-align: center; }
+
         .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -27,27 +34,27 @@
 <body>
 
     <div class="card">
-        <h1>🚀 Otimização Operacional com IA</h1>
+        <h1>🚀 Esteira Operacional IA</h1>
 
-        <div class="selector-box">
-            <label style="font-size: 12px; font-weight: bold; color: #64748b;">SELECIONAR MOTOR DE IA:</label>
-            <select id="modelo-ia">
-                <option value="gemini-2.0-flash" selected>Gemini 2.0 Flash (Mais Rápido / Recomendado)</option>
-                <option value="gemini-1.5-flash">Gemini 1.5 Flash (Estável)</option>
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro (Mais Inteligente / Lento)</option>
-            </select>
+        <div class="input-group">
+            <label>MODELO IA:</label>
+            <input type="text" id="modelo-manual" class="input-text" placeholder="gemini-2.0-flash">
         </div>
 
-        <p>Insira a Product Story:</p>
-        <textarea id="requisito" placeholder="Ex: Criar fluxo de autorização de pagamentos..."></textarea>
+        <div class="input-group">
+            <label>REQUISITO:</label>
+            <textarea id="requisito" placeholder="Descreva o requisito..."></textarea>
+        </div>
 
-        <button class="btn-main" id="btn-gerar" onclick="gerar()">
-            <div class="spinner" id="loader"></div>
-            <span id="btn-text">Iniciar Reunião dos Agentes</span>
-        </button>
+        <div class="actions">
+            <button class="btn-main" id="btn-gerar" onclick="gerar()">
+                <div class="spinner" id="loader"></div>
+                <span id="btn-text">Iniciar Processamento</span>
+            </button>
+            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Baixar PDF</button>
+        </div>
     </div>
 
-    <!-- TABS MANTIDAS IGUAIS -->
     <div class="tabs">
         <button class="tab active" onclick="verTab(event, 'po')">PO</button>
         <button class="tab" onclick="verTab(event, 'qa')">QA</button>
@@ -60,21 +67,23 @@
     <div id="qa" class="content">Resultados...</div>
     <div id="rm" class="content">Resultados...</div>
     <div id="sizing" class="content">Resultados...</div>
-    <div id="warroom" class="content warroom-style">Discussão aparecerá aqui.</div>
+    <div id="warroom" class="content warroom-style">Discussão...</div>
 
     <script>
+        let dadosAtuais = null;
+
         async function gerar() {
             const req = document.getElementById('requisito').value;
-            const modelName = document.getElementById('modelo-ia').value;
+            const modelName = document.getElementById('modelo-manual').value || "gemini-2.0-flash";
             const btn = document.getElementById('btn-gerar');
+            const btnPdf = document.getElementById('btn-pdf');
             const loader = document.getElementById('loader');
-            const btnText = document.getElementById('btn-text');
 
-            if(!req) return alert("Descreva o requisito.");
+            if(!req) return alert("Preencha o requisito.");
 
             btn.disabled = true;
             loader.style.display = 'inline-block';
-            btnText.innerText = 'Processando com ' + modelName + '...';
+            btnPdf.style.display = 'none';
 
             try {
                 const response = await fetch('/api/processar', {
@@ -86,19 +95,55 @@
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error);
 
+                dadosAtuais = data; // Salva para o PDF
                 document.getElementById('po').innerText = data.po;
                 document.getElementById('qa').innerText = data.qa;
                 document.getElementById('rm').innerText = data.rm;
                 document.getElementById('sizing').innerText = data.sizing;
                 document.getElementById('warroom').innerText = data.warroom;
 
+                btnPdf.style.display = 'block'; // Mostra botão PDF
+
             } catch (err) {
-                alert("Erro: " + err.message);
+                alert("ERRO: " + err.message);
             } finally {
                 btn.disabled = false;
                 loader.style.display = 'none';
-                btnText.innerText = 'Iniciar Reunião dos Agentes';
             }
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const margem = 15;
+
+            doc.setFontSize(18);
+            doc.text("Relatório de Esteira Operacional IA", margem, 20);
+            doc.setFontSize(10);
+            doc.text(`Gerado em: ${new Date().toLocaleString()}`, margem, 28);
+            doc.line(margem, 32, 195, 32);
+
+            const secoes = [
+                { t: "1. CRITÉRIOS DE ACEITE (PO)", d: dadosAtuais.po },
+                { t: "2. PLANO DE TESTES (QA)", d: dadosAtuais.qa },
+                { t: "3. ANÁLISE DE RELEASE (RM)", d: dadosAtuais.rm },
+                { t: "4. ESTIMATIVA TÉCNICA (SIZING)", d: dadosAtuais.sizing },
+                { t: "5. WAR ROOM (DISCUSSÃO ESTRATÉGICA)", d: dadosAtuais.warroom }
+            ];
+
+            let y = 40;
+            secoes.forEach(s => {
+                if (y > 250) { doc.addPage(); y = 20; }
+                doc.setFont("helvetica", "bold");
+                doc.text(s.t, margem, y);
+                y += 7;
+                doc.setFont("helvetica", "normal");
+                const splitText = doc.splitTextToSize(s.d, 180);
+                doc.text(splitText, margem, y);
+                y += (splitText.length * 5) + 10;
+            });
+
+            doc.save("Relatorio_Esteira_IA.pdf");
         }
 
         function verTab(evt, id) {
