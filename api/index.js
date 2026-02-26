@@ -3,31 +3,34 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+
 app.post("/api/processar", async (req, res) => {
     try {
         const { requisito } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
-
-        if (!apiKey) throw new Error("API Key não configurada na Vercel.");
-        if (!requisito) throw new Error("Requisito não fornecido.");
-
-        const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        // Execução em paralelo para ganhar velocidade
-        const [resPO, resQA] = await Promise.all([
-            model.generateContent(`Aja como PO Sênior. Gere APENAS Critérios de Aceite em Gherkin. Sem introduções. Requisito: ${requisito}`),
-            model.generateContent(`Aja como QA Sênior. Gere APENAS Plano de Testes (ID, Passo, Resultado) baseado no requisito: ${requisito}`)
-        ]);
+        // AGENTE 1: PO (Critérios de Aceite)
+        const promptPO = `Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em Gherkin. Proibido introduções ou saudações. Requisito: ${requisito}`;
+        const resultPO = await model.generateContent(promptPO);
+        const textoPO = resultPO.response.text();
 
-        const textoPO = resPO.response.text();
-        const textoQA = resQA.response.text();
+        // AGENTE 2: QA (Plano de Testes)
+        const promptQA = `Aja como Analista de QA Sênior. Com base nos Critérios abaixo, gere APENAS o Plano de Testes estruturado. Sem diálogos. Critérios: ${textoPO}`;
+        const resultQA = await model.generateContent(promptQA);
+        const textoQA = resultQA.response.text();
 
-        // Terceiro agente (Sizing) usa o contexto dos dois anteriores
-        const resSizing = await model.generateContent(`Aja como Sizing Manager. Gere estimativa de horas, perfis (Jr/Pl/Sr). Adicione 15% Gestão e 10% Garantia. Base técnico: ${textoPO} e ${textoQA}`);
-        const textoSizing = resSizing.response.text();
+        // AGENTE 3: RELEASE MANAGER (Relatório de Risco)
+        const promptRM = `Aja como Release Manager. Gere um relatório executivo técnico para diretoria. Proibido introduções. ESTRUTURA: ### RELATÓRIO DE RELEASE | Escopo | Análise de Risco | Impacto. Referências: ${textoPO} e ${textoQA}`;
+        const resultRM = await model.generateContent(promptRM);
+        const textoRM = resultRM.response.text();
 
-        res.json({ po: textoPO, qa: textoQA, sizing: textoSizing });
+        // AGENTE 4: SIZING (Precificação)
+        const promptSizing = `Aja como Gerente de Sizing e Costing. Gere uma estimativa técnica para faturamento. Proibido introduções. REGRAS: 15% Gestão e 10% Garantia. Referências: ${textoPO} e ${textoQA}`;
+        const resultSizing = await model.generateContent(promptSizing);
+        const textoSizing = resultSizing.response.text();
+
+        res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
