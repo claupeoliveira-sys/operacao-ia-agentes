@@ -10,7 +10,7 @@ app.post("/api/processar", async (req, res) => {
         const { requisito } = req.body;
         if (!process.env.GEMINI_API_KEY) throw new Error("API KEY faltando nas variáveis de ambiente.");
 
-        const model = genAI.getGenerativeModel({ model: "gemini-3" });
+        const model = genAI.getGenerativeModel({ model: "gemini-3-flash" });
 
         // AGENTE 1: PO
         const resultPO = await model.generateContent(`Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em formato Gherkin. Proibido usar introduções, saudações ou frases de polidez. Requisito para processamento: ${requisito}`);
