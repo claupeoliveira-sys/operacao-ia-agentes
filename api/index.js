@@ -16,29 +16,30 @@ app.post("/api/processar", async (req, res) => {
         const model = genAI.getGenerativeModel({ model: modeloFinal });
 
         console.log("-> Agente PO...");
-        const resPO = await model.generateContent(`Aja como um Product Owner Sênior. Sua saída deve conter APENAS os Critérios de Aceite em formato Gherkin para o requisito: ${requisito}. Proibido introduções.`);
+        const resPO = await model.generateContent(`Aja como um Product Owner Sênior. Sua saída deve ser EXCLUSIVAMENTE o documento de Critérios de Aceite em formato Gherkin para o requisito: ${requisito}. Proibido saudações, explicações ou frases de polidez.`);
         const textoPO = resPO.response.text();
         await delay(3000); 
 
         console.log("-> Agente QA...");
-        const resQA = await model.generateContent(`Aja como QA Analyst. Com base nos critérios abaixo, quebre o requisito em steps e gere APENAS os Casos de Teste de UI estruturados. Documento: ${textoPO}`);
+        const resQA = await model.generateContent(`Aja como QA Analyst Sênior. Com base nos critérios fornecidos, gere APENAS o Plano de Testes detalhado com Steps, Entradas e Resultados Esperados para Testes de UI. Proibido qualquer texto introdutório. Documento: ${textoPO}`);
         const textoQA = resQA.response.text();
         await delay(3000);
 
         console.log("-> Agente RM...");
-        const resRM = await model.generateContent(`Aja como Release Manager. Analise o impacto e gere um Release Notes técnico e relevante para diretoria, focando no que é crítico. Base: ${textoPO} e ${textoQA}`);
+        const resRM = await model.generateContent(`Aja como Release Manager. Produza EXCLUSIVAMENTE um Relatório Técnico de Release contendo: Sumário Executivo, Análise de Impacto em Produção e Notas de Versão (Release Notes). Sem introduções. Base: ${textoPO} e ${textoQA}`);
         const textoRM = resRM.response.text();
         await delay(3000);
 
         console.log("-> Agente Sizing...");
-        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Estime esforço em horas e perfis, aplicando governança de 15% Gestão e 10% Buffer para eficiência. Base: ${textoQA}`);
+        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS uma tabela de esforço contendo: Perfis Sugeridos, Horas por Fase e aplicação de governança (15% Gestão / 10% Buffer). Saída puramente técnica. Base: ${textoQA}`);
         const textoSizing = resSizing.response.text();
         await delay(3000);
 
         console.log("-> Agente War Room...");
-        const resWar = await model.generateContent(`Aja como Moderador Técnico. Gere um diálogo de 4 falas entre PO, QA e Sizing discutindo riscos de regressão e decisão GO/NO-GO. Base: ${textoPO} e ${textoSizing}`);
+        const resWar = await model.generateContent(`Aja como Moderador de Comitê Técnico. Gere um diálogo estrito de 4 rodadas entre as áreas sobre Riscos de Regressão e Mitigação, finalizando com a Decisão de Deploy (GO/NO-GO). Base: ${textoPO}, ${textoQA} e ${textoSizing}`);
         const textoWarRoom = resWar.response.text();
 
+       
         console.log(`✅ Sucesso com ${modeloFinal}`);
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
 
