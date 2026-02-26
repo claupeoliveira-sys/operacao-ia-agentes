@@ -3,7 +3,7 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1beta' });
 
 app.post("/api/processar", async (req, res) => {
     const { requisito, modelo } = req.body;
