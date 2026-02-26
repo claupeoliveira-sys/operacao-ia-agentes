@@ -5,81 +5,92 @@
     <link rel="icon" href="data:,">
     <title>SaaS Agentes IA</title>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        textarea { width: 100%; height: 80px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; }
-        #error-box { display: none; background: #ffebee; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ef9a9a; }
-        .tabs { display: flex; margin-top: 20px; border-bottom: 2px solid #ddd; }
-        .tab { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: bold; }
-        .tab.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
-        .content { display: none; padding: 20px; background: white; white-space: pre-wrap; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box;}
+
+        /* Estilo do Botão e Spinner */
+        #btn-gerar { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #btn-gerar:disabled { background: #94a3b8; cursor: not-allowed; }
+        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Abas */
+        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 12px 24px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; font-size: 14px; }
+        .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
+        .content { display: none; padding: 25px; background: white; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-family: monospace; }
         .content.active { display: block; }
-        #loading { display: none; color: #2563eb; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>Esteira de Operações IA</h1>
-        <div id="error-box"></div>
-        <textarea id="requisito" placeholder="Descreva o requisito aqui..."></textarea>
-        <button onclick="gerar()" id="btn">Gerar Documentação</button>
-        <p id="loading">⏳ Agentes trabalhando... aguarde.</p>
+        <h1>🚀 Esteira Operacional IA</h1>
+        <p>Insira o requisito de negócio para processamento dos agentes:</p>
+        <textarea id="requisito" placeholder="Ex: Criar sistema de checkout via PIX..."></textarea>
+
+        <button id="btn-gerar" onclick="gerar()">
+            <div class="spinner" id="loader"></div>
+            <span id="btn-text">Processar Requisito</span>
+        </button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="verTab('po')">PO</button>
-        <button class="tab" onclick="verTab('qa')">QA</button>
-        <button class="tab" onclick="verTab('sizing')">Sizing</button>
+        <button class="tab active" onclick="verTab(event, 'po')">PO (Analise)</button>
+        <button class="tab" onclick="verTab(event, 'qa')">QA (Testes)</button>
+        <button class="tab" onclick="verTab(event, 'rm')">Release (Risco)</button>
+        <button class="tab" onclick="verTab(event, 'sizing')">Sizing (Pricing)</button>
     </div>
 
-    <div id="po" class="content active">Resultados do PO aparecerão aqui...</div>
-    <div id="qa" class="content">Resultados do QA aparecerão aqui...</div>
-    <div id="sizing" class="content">Sizing aparecerão aqui...</div>
+    <div id="po" class="content active">Aguardando...</div>
+    <div id="qa" class="content">Aguardando...</div>
+    <div id="rm" class="content">Aguardando...</div>
+    <div id="sizing" class="content">Aguardando...</div>
 
     <script>
         async function gerar() {
-            const req = document.getElementById('requisito').value;
-            const errorBox = document.getElementById('error-box');
-            const btn = document.getElementById('btn');
-            const loading = document.getElementById('loading');
+            const reqText = document.getElementById('requisito').value;
+            const btn = document.getElementById('btn-gerar');
+            const loader = document.getElementById('loader');
+            const btnText = document.getElementById('btn-text');
 
-            if (!req) return alert("Digite algo!");
+            if (!reqText) return alert("Por favor, digite um requisito!");
 
-            // Limpeza inicial
-            errorBox.style.display = 'none';
+            // Iniciar Loading
             btn.disabled = true;
-            loading.style.display = 'block';
+            loader.style.display = 'inline-block';
+            btnText.innerText = 'Agentes em reunião...';
 
             try {
                 const response = await fetch('/api/processar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ requisito: req })
+                    body: JSON.stringify({ requisito: reqText })
                 });
 
                 const data = await response.json();
-
-                if (!response.ok) throw new Error(data.error || "Erro desconhecido no servidor.");
+                if (!response.ok) throw new Error(data.error);
 
                 document.getElementById('po').innerText = data.po;
                 document.getElementById('qa').innerText = data.qa;
+                document.getElementById('rm').innerText = data.rm;
                 document.getElementById('sizing').innerText = data.sizing;
 
             } catch (err) {
-                errorBox.innerText = "❌ ERRO: " + err.message;
-                errorBox.style.display = 'block';
+                alert("Erro: " + err.message);
             } finally {
                 btn.disabled = false;
-                loading.style.display = 'none';
+                loader.style.display = 'none';
+                btnText.innerText = 'Processar Requisito';
             }
         }
 
-        function verTab(id) {
+        function verTab(evt, id) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            event.currentTarget.classList.add('active');
+            evt.currentTarget.classList.add('active');
         }
     </script>
 </body>
