@@ -2,67 +2,84 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Esteira de Agentes IA</title>
+    <link rel="icon" href="data:,">
+    <title>SaaS Agentes IA</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
-        textarea { width: 100%; height: 100px; padding: 10px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px; }
-        button#btn-gerar { background: #2563eb; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        .tabs { display: flex; gap: 10px; margin-top: 30px; border-bottom: 2px solid #ddd; }
-        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: bold; color: #666; }
-        .tab-btn.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .tab-content { display: none; background: white; padding: 20px; border-radius: 0 0 8px 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); line-height: 1.6; white-space: pre-wrap; }
-        .tab-content.active { display: block; }
-        #loading { display: none; color: #2563eb; font-weight: bold; margin-top: 10px; }
+        body { font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; background: #f0f2f5; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        textarea { width: 100%; height: 80px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; padding: 10px; }
+        #error-box { display: none; background: #ffebee; color: #c62828; padding: 15px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ef9a9a; }
+        .tabs { display: flex; margin-top: 20px; border-bottom: 2px solid #ddd; }
+        .tab { padding: 10px 20px; cursor: pointer; border: none; background: none; font-weight: bold; }
+        .tab.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
+        .content { display: none; padding: 20px; background: white; white-space: pre-wrap; }
+        .content.active { display: block; }
+        #loading { display: none; color: #2563eb; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <h1>🚀 Esteira Operacional IA</h1>
-    <p>Insira o requisito para os agentes processarem:</p>
-
-    <textarea id="requisito" placeholder="Ex: Checkout com pagamento via PIX..."></textarea>
-    <br>
-    <button id="btn-gerar" onclick="gerarDocumentacao()">Gerar Documentação Completa</button>
-    <div id="loading">Os agentes estão trabalhando... aguarde.</div>
-
-    <div class="tabs">
-        <button class="tab-btn active" onclick="tab(event, 'po')">PO (Critérios)</button>
-        <button class="tab-btn" onclick="tab(event, 'qa')">QA (Testes)</button>
-        <button class="tab-btn" onclick="tab(event, 'sizing')">Sizing (Horas)</button>
+    <div class="card">
+        <h1>Esteira de Operações IA</h1>
+        <div id="error-box"></div>
+        <textarea id="requisito" placeholder="Descreva o requisito aqui..."></textarea>
+        <button onclick="gerar()" id="btn">Gerar Documentação</button>
+        <p id="loading">⏳ Agentes trabalhando... aguarde.</p>
     </div>
 
-    <div id="po" class="tab-content active">Aguardando requisito...</div>
-    <div id="qa" class="tab-content">Aguardando requisito...</div>
-    <div id="sizing" class="tab-content">Aguardando requisito...</div>
+    <div class="tabs">
+        <button class="tab active" onclick="verTab('po')">PO</button>
+        <button class="tab" onclick="verTab('qa')">QA</button>
+        <button class="tab" onclick="verTab('sizing')">Sizing</button>
+    </div>
+
+    <div id="po" class="content active">Resultados do PO aparecerão aqui...</div>
+    <div id="qa" class="content">Resultados do QA aparecerão aqui...</div>
+    <div id="sizing" class="content">Sizing aparecerão aqui...</div>
 
     <script>
-        async function gerarDocumentacao() {
-            const reqText = document.getElementById('requisito').value;
-            if(!reqText) return alert("Digite um requisito!");
+        async function gerar() {
+            const req = document.getElementById('requisito').value;
+            const errorBox = document.getElementById('error-box');
+            const btn = document.getElementById('btn');
+            const loading = document.getElementById('loading');
 
-            document.getElementById('loading').style.display = 'block';
+            if (!req) return alert("Digite algo!");
 
-            const response = await fetch('/api/processar', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ requisito: reqText })
-            });
+            // Limpeza inicial
+            errorBox.style.display = 'none';
+            btn.disabled = true;
+            loading.style.display = 'block';
 
-            const data = await response.json();
+            try {
+                const response = await fetch('/api/processar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requisito: req })
+                });
 
-            document.getElementById('res-po').innerText = data.po;
-            document.getElementById('res-qa').innerText = data.qa;
-            document.getElementById('res-sizing').innerText = data.sizing;
+                const data = await response.json();
 
-            document.getElementById('loading').style.display = 'none';
+                if (!response.ok) throw new Error(data.error || "Erro desconhecido no servidor.");
+
+                document.getElementById('po').innerText = data.po;
+                document.getElementById('qa').innerText = data.qa;
+                document.getElementById('sizing').innerText = data.sizing;
+
+            } catch (err) {
+                errorBox.innerText = "❌ ERRO: " + err.message;
+                errorBox.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                loading.style.display = 'none';
+            }
         }
 
-        function tab(evt, name) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(name).classList.add('active');
-            evt.currentTarget.classList.add('active');
+        function verTab(id) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            event.currentTarget.classList.add('active');
         }
     </script>
 </body>
