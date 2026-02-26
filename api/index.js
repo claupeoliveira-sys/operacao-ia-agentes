@@ -12,7 +12,7 @@ app.post("/api/processar", async (req, res) => {
         if (!requisito) throw new Error("Requisito não fornecido.");
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // Execução em paralelo para ganhar velocidade
         const [resPO, resQA] = await Promise.all([
