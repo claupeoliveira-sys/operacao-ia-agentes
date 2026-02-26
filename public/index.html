@@ -3,36 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>SaaS Agentes IA</title>
+    <title>SaaS Operação IA</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box;}
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f1f5f9; color: #334155; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; resize: vertical; }
 
-        /* Estilo do Botão e Spinner */
-        #btn-gerar { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        #btn-gerar { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; display: flex; justify-content: center; align-items: center; gap: 10px; transition: 0.2s; }
+        #btn-gerar:hover { background: #1d4ed8; }
         #btn-gerar:disabled { background: #94a3b8; cursor: not-allowed; }
-        .spinner { width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; display: none; }
+
+        .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Abas */
-        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; }
-        .tab { padding: 12px 24px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; font-size: 14px; }
+        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
+        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; }
         .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .content { display: none; padding: 25px; background: white; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-family: monospace; }
+        .tab-war { color: #db2777 !important; }
+        .tab-war.active { border-bottom-color: #db2777 !important; }
+
+        .content { display: none; padding: 25px; background: white; border-radius: 0 0 12px 12px; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
         .content.active { display: block; }
+        .warroom-style { border-left: 5px solid #db2777; background: #fff1f2; }
     </style>
 </head>
 <body>
 
     <div class="card">
         <h1>🚀 Esteira Operacional IA</h1>
-        <p>Insira o requisito de negócio para processamento dos agentes:</p>
-        <textarea id="requisito" placeholder="Ex: Criar sistema de checkout via PIX..."></textarea>
+        <p>Descreva o requisito para a reunião dos agentes:</p>
+        <textarea id="requisito" placeholder="Ex: Sistema de logística com tracking via API de 3 transportadoras..."></textarea>
 
         <button id="btn-gerar" onclick="gerar()">
             <div class="spinner" id="loader"></div>
-            <span id="btn-text">Processar Requisito</span>
+            <span id="btn-text">Iniciar Processamento</span>
         </button>
     </div>
 
@@ -41,12 +45,14 @@
         <button class="tab" onclick="verTab(event, 'qa')">QA (Testes)</button>
         <button class="tab" onclick="verTab(event, 'rm')">Release (Risco)</button>
         <button class="tab" onclick="verTab(event, 'sizing')">Sizing (Pricing)</button>
+        <button class="tab tab-war" onclick="verTab(event, 'warroom')">🔥 War Room</button>
     </div>
 
-    <div id="po" class="content active">Aguardando...</div>
-    <div id="qa" class="content">Aguardando...</div>
-    <div id="rm" class="content">Aguardando...</div>
-    <div id="sizing" class="content">Aguardando...</div>
+    <div id="po" class="content active">Resultados do PO aparecerão aqui.</div>
+    <div id="qa" class="content">Resultados do QA aparecerão aqui.</div>
+    <div id="rm" class="content">Relatório de Release aparecerá aqui.</div>
+    <div id="sizing" class="content">Cálculos de horas aparecerão aqui.</div>
+    <div id="warroom" class="content warroom-style">Aguardando discussão técnica dos agentes...</div>
 
     <script>
         async function gerar() {
@@ -57,10 +63,9 @@
 
             if (!reqText) return alert("Por favor, digite um requisito!");
 
-            // Iniciar Loading
             btn.disabled = true;
             loader.style.display = 'inline-block';
-            btnText.innerText = 'Agentes em reunião...';
+            btnText.innerText = 'Agentes em reunião técnica...';
 
             try {
                 const response = await fetch('/api/processar', {
@@ -76,13 +81,14 @@
                 document.getElementById('qa').innerText = data.qa;
                 document.getElementById('rm').innerText = data.rm;
                 document.getElementById('sizing').innerText = data.sizing;
+                document.getElementById('warroom').innerText = data.warroom;
 
             } catch (err) {
-                alert("Erro: " + err.message);
+                alert("Erro no servidor: " + err.message);
             } finally {
                 btn.disabled = false;
                 loader.style.display = 'none';
-                btnText.innerText = 'Processar Requisito';
+                btnText.innerText = 'Iniciar Processamento';
             }
         }
 
