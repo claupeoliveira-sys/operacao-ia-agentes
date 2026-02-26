@@ -20,23 +20,23 @@ app.post("/api/processar", async (req, res) => {
         console.log("-> Executando agentes em cascata...");
 
         // AGENTE 1: PO
-        const resultPO = await model.generateContent(`Aja como um Product Owner Sênior. Gere Critérios de Aceite em Gherkin. Requisito: ${requisito}`);
+        const resultPO = await model.generateContent(`Aja como um Product Owner Sênior. Sua saída deve conter APENAS os Critérios de Aceite (Acceptance Criteria) em formato Gherkin para o requisito: ${requisito}. Proibido introduções.`);
         const textoPO = resultPO.response.text();
 
         // AGENTE 2: QA
-        const resultQA = await model.generateContent(`Aja como Analista de QA Sênior. Gere Plano de Testes estruturado baseado em: ${textoPO}`);
+        const resultQA = await model.generateContent(`Aja como QA Analyst. Com base nos critérios abaixo, quebre o requisito em steps e gere APENAS os Casos de Teste de UI (UI Test Cases) estruturados. Documento: ${textoPO}`);
         const textoQA = resultQA.response.text();
 
         // AGENTE 3: RM
-        const resultRM = await model.generateContent(`Aja como Release Manager. Gere relatório executivo (Escopo, Risco, Impacto) baseado em: ${textoPO} e ${textoQA}`);
+        const resultRM = await model.generateContent(`Aja como Release Manager. Analise o impacto e gere um Release Notes técnico e relevante para diretoria, focando no que é crítico para o produto. Base: ${textoPO} e ${textoQA}`;
         const textoRM = resultRM.response.text();
 
         // AGENTE 4: SIZING
-        const resultSizing = await model.generateContent(`Aja como Gerente de Sizing. Estime horas e perfis técnicos com 15% Gestão e 10% Buffer. Base: ${textoPO} e ${textoQA}`);
+        const resultSizing = await model.generateContent(`Aja como Gerente de Sizing. Estime o esforço em horas e perfis necessários, aplicando governança de 15% Gestão e 10% Buffer. Considere a meta de eficiência operacional. Base: ${textoPO} e ${textoQA} e ${textoRM}`;
         const textoSizing = resultSizing.response.text();
 
         // AGENTE 5: WAR ROOM
-        const resultWarRoom = await model.generateContent(`Aja como Moderador. Gere um diálogo de alinhamento de 4 falas entre PO, QA e Sizing discutindo o projeto. Base: ${textoPO}, ${textoQA} e ${textoSizing}`);
+        const resultWarRoom = await model.generateContent(`Aja como Moderador Técnico. Gere um diálogo de 4 falas ao total e duas de cada vez, entre PO, QA e Sizing discutindo riscos de regressão e a decisão final de GO/NO-GO para o deploy. Base: ${textoPO} e ${textoSizing} e ${textoQA} e ${textoRM}`);
         const textoWarRoom = resultWarRoom.response.text();
 
         console.log(`✅ Sucesso total com o modelo ${modeloFinal}`);
