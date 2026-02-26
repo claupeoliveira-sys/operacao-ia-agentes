@@ -26,14 +26,10 @@ app.post("/api/processar", async (req, res) => {
         const textoRM = resultRM.response.text();
 
         // AGENTE 4: SIZING (Precificação)
-        const promptSizing = `Aja como Gerente de Sizing e Costing. Gere uma estimativa técnica para faturamento. Proibido introduções. REGRAS: 15% Gestão e 10% Garantia. Referências: ${textoPO} e ${textoQA}`;
+        const promptSizing = `Aja como Gerente de Sizing e Costing. Gere uma estimativa técnica para faturamento. Horas, Perfis, Senioridade. Proibido introduções. REGRAS: 15% Gestão e 10% Garantia. Referências: ${textoPO} e ${textoQA}`;
         const resultSizing = await model.generateContent(promptSizing);
         const textoSizing = resultSizing.response.text();
 
-        res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
+        // AGENTE 5: WAR ROOM (Discussão)
+        const promptWarRoom = 
 
-module.exports = app;
