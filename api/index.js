@@ -22,7 +22,7 @@ app.get("/api/modelos", async (req, res) => {
 app.post("/api/processar", async (req, res) => {
     try {
         const { requisito } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
         // AGENTE 1: PO
         const promptPO = `Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em formato Gherkin. Proibido usar introduções, saudações ou frases de polidez. Requisito para processamento: ${requisito}`;
