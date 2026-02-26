@@ -2,29 +2,25 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <link rel="icon" href="data:,">
-    <title>Sizing & Operação IA - Exportação PDF</title>
-    <!-- Bibliotecas para PDF -->
+    <title>Sizing & Operação IA - Claupe Oliveira</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         .input-group { margin-bottom: 20px; }
         .input-group label { display: block; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 5px; }
         .input-text { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: monospace; }
-        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; }
+        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; font-size: 16px; margin-bottom: 20px; }
 
         .actions { display: flex; gap: 10px; }
         .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 2; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; text-align: center; }
+        .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; }
 
         .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
-        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; }
+        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; }
         .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
         .content { display: none; padding: 25px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
         .content.active { display: block; }
@@ -34,116 +30,96 @@
 <body>
 
     <div class="card">
-        <h1>🚀 Esteira Operacional IA</h1>
-
+        <h1>🚀 Otimização Operacional com Agentes</h1>
         <div class="input-group">
-            <label>MODELO IA:</label>
-            <input type="text" id="modelo-manual" class="input-text" placeholder="gemini-2.0-flash" value="gemini-2.5-flash">
+            <label>ENGINE (MODELO):</label>
+            <input type="text" id="modelo" class="input-text" value="gemini-2.5-flash">
         </div>
-
         <div class="input-group">
-            <label>REQUISITO:</label>
-            <textarea id="requisito" placeholder="Descreva o requisito..."></textarea>
+            <label>REQUISITO / PRODUCT STORY:</label>
+            <textarea id="requisito" placeholder="Ex: Redução de 60 para 40 testers através de automação em escala..."></textarea>
         </div>
-
         <div class="actions">
             <button class="btn-main" id="btn-gerar" onclick="gerar()">
                 <div class="spinner" id="loader"></div>
-                <span id="btn-text">Iniciar Processamento</span>
+                <span id="btn-text">Iniciar Esteira de Agentes</span>
             </button>
-            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Baixar PDF</button>
+            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório</button>
         </div>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="verTab(event, 'po')">PO</button>
-        <button class="tab" onclick="verTab(event, 'qa')">QA</button>
-        <button class="tab" onclick="verTab(event, 'rm')">Release</button>
-        <button class="tab" onclick="verTab(event, 'sizing')">Sizing</button>
+        <button class="tab active" onclick="verTab(event, 'po')">PO (Gherkin)</button>
+        <button class="tab" onclick="verTab(event, 'qa')">QA (UI Tests)</button>
+        <button class="tab" onclick="verTab(event, 'rm')">Release (Notes)</button>
+        <button class="tab" onclick="verTab(event, 'sizing')">Sizing (SLA)</button>
         <button class="tab" style="color:#db2777" onclick="verTab(event, 'warroom')">🔥 War Room</button>
     </div>
 
-    <div id="po" class="content active">Resultados...</div>
-    <div id="qa" class="content">Resultados...</div>
-    <div id="rm" class="content">Resultados...</div>
-    <div id="sizing" class="content">Resultados...</div>
-    <div id="warroom" class="content warroom-style">Discussão...</div>
+    <div id="po" class="content active">Aguardando...</div>
+    <div id="qa" class="content">Aguardando...</div>
+    <div id="rm" class="content">Aguardando...</div>
+    <div id="sizing" class="content">Aguardando...</div>
+    <div id="warroom" class="content warroom-style">Aguardando...</div>
 
     <script>
-        let dadosAtuais = null;
-
+        let dadosPdf = null;
         async function gerar() {
             const req = document.getElementById('requisito').value;
-            const modelName = document.getElementById('modelo-manual').value || "gemini-2.0-flash";
+            const mod = document.getElementById('modelo').value;
             const btn = document.getElementById('btn-gerar');
-            const btnPdf = document.getElementById('btn-pdf');
-            const loader = document.getElementById('loader');
+            const ldr = document.getElementById('loader');
+            const pdf = document.getElementById('btn-pdf');
 
-            if(!req) return alert("Preencha o requisito.");
+            if(!req) return alert("Insira o requisito!");
 
             btn.disabled = true;
-            loader.style.display = 'inline-block';
-            btnPdf.style.display = 'none';
+            ldr.style.display = 'inline-block';
+            pdf.style.display = 'none';
 
             try {
-                const response = await fetch('/api/processar', {
+                const r = await fetch('/api/processar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ requisito: req, modelo: modelName })
+                    body: JSON.stringify({ requisito: req, modelo: mod })
                 });
+                const d = await r.json();
+                if(!r.ok) throw new Error(d.error);
 
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.error);
-
-                dadosAtuais = data; // Salva para o PDF
-                document.getElementById('po').innerText = data.po;
-                document.getElementById('qa').innerText = data.qa;
-                document.getElementById('rm').innerText = data.rm;
-                document.getElementById('sizing').innerText = data.sizing;
-                document.getElementById('warroom').innerText = data.warroom;
-
-                btnPdf.style.display = 'block'; // Mostra botão PDF
-
-            } catch (err) {
-                alert("ERRO: " + err.message);
-            } finally {
-                btn.disabled = false;
-                loader.style.display = 'none';
-            }
+                dadosPdf = d;
+                document.getElementById('po').innerText = d.po;
+                document.getElementById('qa').innerText = d.qa;
+                document.getElementById('rm').innerText = d.rm;
+                document.getElementById('sizing').innerText = d.sizing;
+                document.getElementById('warroom').innerText = d.warroom;
+                pdf.style.display = 'block';
+            } catch (err) { alert("ERRO: " + err.message); }
+            finally { btn.disabled = false; ldr.style.display = 'none'; }
         }
 
         function exportarPDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const margem = 15;
-
-            doc.setFontSize(18);
-            doc.text("Relatório de Esteira Operacional IA", margem, 20);
-            doc.setFontSize(10);
-            doc.text(`Gerado em: ${new Date().toLocaleString()}`, margem, 28);
-            doc.line(margem, 32, 195, 32);
+            doc.setFontSize(16); doc.text("Relatório Técnico de Alinhamento - Agentes IA", 15, 20);
+            doc.setFontSize(10); doc.text(`Modelo: ${document.getElementById('modelo').value} | Data: ${new Date().toLocaleString()}`, 15, 28);
 
             const secoes = [
-                { t: "1. CRITÉRIOS DE ACEITE (PO)", d: dadosAtuais.po },
-                { t: "2. PLANO DE TESTES (QA)", d: dadosAtuais.qa },
-                { t: "3. ANÁLISE DE RELEASE (RM)", d: dadosAtuais.rm },
-                { t: "4. ESTIMATIVA TÉCNICA (SIZING)", d: dadosAtuais.sizing },
-                { t: "5. WAR ROOM (DISCUSSÃO ESTRATÉGICA)", d: dadosAtuais.warroom }
+                {t: "CRITÉRIOS DE ACEITE (PO)", d: dadosPdf.po},
+                {t: "PLANO DE TESTES UI (QA)", d: dadosPdf.qa},
+                {t: "RELEASE NOTES (RM)", d: dadosPdf.rm},
+                {t: "DIMENSIONAMENTO (SIZING)", d: dadosPdf.sizing},
+                {t: "DISCUSSÃO TÉCNICA (WAR ROOM)", d: dadosPdf.warroom}
             ];
 
             let y = 40;
             secoes.forEach(s => {
-                if (y > 250) { doc.addPage(); y = 20; }
-                doc.setFont("helvetica", "bold");
-                doc.text(s.t, margem, y);
-                y += 7;
+                if(y > 250) { doc.addPage(); y = 20; }
+                doc.setFont("helvetica", "bold"); doc.text(s.t, 15, y); y += 7;
                 doc.setFont("helvetica", "normal");
-                const splitText = doc.splitTextToSize(s.d, 180);
-                doc.text(splitText, margem, y);
-                y += (splitText.length * 5) + 10;
+                const txt = doc.splitTextToSize(s.d, 180);
+                doc.text(txt, 15, y); y += (txt.length * 5) + 12;
             });
-
-            doc.save("Relatorio_Esteira_IA.pdf");
+            doc.save("Relatorio_Eficiencia_IA.pdf");
         }
 
         function verTab(evt, id) {
