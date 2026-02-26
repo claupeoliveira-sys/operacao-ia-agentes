@@ -1,133 +1,80 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <title>Sizing & Operação IA - Claupe Oliveira</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <style>
-        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
-        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 12px; font-weight: bold; color: #64748b; margin-bottom: 5px; }
-        .input-text { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: monospace; }
-        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; font-size: 16px; margin-bottom: 20px; }
+<!-- Substitua o trecho do botão e loader por este -->
+<div class="actions" style="flex-direction: column; gap: 15px;">
+    <button class="btn-main" id="btn-gerar" onclick="gerar()">
+        <span id="btn-text">🚀 Iniciar Esteira de Agentes</span>
+    </button>
 
-        .actions { display: flex; gap: 10px; }
-        .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 2; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; }
-
-        .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; display: none; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
-        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; }
-        .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .content { display: none; padding: 25px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
-        .content.active { display: block; }
-        .warroom-style { border-left: 5px solid #db2777; background: #fff1f2; }
-    </style>
-</head>
-<body>
-
-    <div class="card">
-        <h1>🚀 Otimização Operacional com Agentes</h1>
-        <div class="input-group">
-            <label>ENGINE (MODELO):</label>
-            <input type="text" id="modelo" class="input-text" value="gemini-2.5-flash">
+    <!-- Barra de Status Visual -->
+    <div id="status-container" style="display:none; width: 100%; background: #e2e8f0; border-radius: 8px; padding: 15px; box-sizing: border-box;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <span id="status-step" style="font-weight: bold; color: #2563eb; font-size: 14px;">Iniciando...</span>
+            <span id="status-percent" style="font-weight: bold; color: #64748b; font-size: 14px;">0%</span>
         </div>
-        <div class="input-group">
-            <label>REQUISITO / PRODUCT STORY:</label>
-            <textarea id="requisito" placeholder="Ex: Redução de 60 para 40 testers através de automação em escala..." value="Implementar um sistema de checkout de e-commerce com pagamento via PIX, incluindo geração de QR Code dinâmico com validade de 30 minutos e confirmação automática de recebimento (webhook) para liberar o pedido no estoque"></textarea>
-        </div>
-        <div class="actions">
-            <button class="btn-main" id="btn-gerar" onclick="gerar()">
-                <div class="spinner" id="loader"></div>
-                <span id="btn-text">Iniciar Esteira de Agentes</span>
-            </button>
-            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório</button>
+        <div style="width: 100%; background: #cbd5e1; height: 8px; border-radius: 4px;">
+            <div id="status-bar" style="width: 0%; background: #2563eb; height: 100%; border-radius: 4px; transition: width 0.5s ease;"></div>
         </div>
     </div>
 
-    <div class="tabs">
-        <button class="tab active" onclick="verTab(event, 'po')">PO (Gherkin)</button>
-        <button class="tab" onclick="verTab(event, 'qa')">QA (UI Tests)</button>
-        <button class="tab" onclick="verTab(event, 'rm')">Release (Notes)</button>
-        <button class="tab" onclick="verTab(event, 'sizing')">Sizing (SLA)</button>
-        <button class="tab" style="color:#db2777" onclick="verTab(event, 'warroom')">🔥 War Room</button>
-    </div>
+    <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório Consolidado</button>
+</div>
 
-    <div id="po" class="content active">Aguardando...</div>
-    <div id="qa" class="content">Aguardando...</div>
-    <div id="rm" class="content">Aguardando...</div>
-    <div id="sizing" class="content">Aguardando...</div>
-    <div id="warroom" class="content warroom-style">Aguardando...</div>
+<script>
+    // Nova função para atualizar o status na tela
+    function atualizarStatus(step, percent) {
+        document.getElementById('status-container').style.display = 'block';
+        document.getElementById('status-step').innerText = step;
+        document.getElementById('status-bar').style.width = percent + '%';
+        document.getElementById('status-percent').innerText = percent + '%';
+    }
 
-    <script>
-        let dadosPdf = null;
-        async function gerar() {
-            const req = document.getElementById('requisito').value;
-            const mod = document.getElementById('modelo').value;
-            const btn = document.getElementById('btn-gerar');
-            const ldr = document.getElementById('loader');
-            const pdf = document.getElementById('btn-pdf');
+    async function gerar() {
+        const req = document.getElementById('requisito').value;
+        const mod = document.getElementById('modelo').value;
+        const btn = document.getElementById('btn-gerar');
+        const pdf = document.getElementById('btn-pdf');
 
-            if(!req) return alert("Insira o requisito!");
+        if(!req) return alert("Insira o requisito!");
 
-            btn.disabled = true;
-            ldr.style.display = 'inline-block';
-            pdf.style.display = 'none';
+        btn.disabled = true;
+        pdf.style.display = 'none';
 
-            try {
-                const r = await fetch('/api/processar', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ requisito: req, modelo: mod })
-                });
-                const d = await r.json();
-                if(!r.ok) throw new Error(d.error);
+        // Início da régua de status
+        atualizarStatus("Mapeando Requisitos (PO)...", 10);
 
-                dadosPdf = d;
-                document.getElementById('po').innerText = d.po;
-                document.getElementById('qa').innerText = d.qa;
-                document.getElementById('rm').innerText = d.rm;
-                document.getElementById('sizing').innerText = d.sizing;
-                document.getElementById('warroom').innerText = d.warroom;
-                pdf.style.display = 'block';
-            } catch (err) { alert("ERRO: " + err.message); }
-            finally { btn.disabled = false; ldr.style.display = 'none'; }
-        }
-
-        function exportarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            doc.setFontSize(16); doc.text("Relatório Técnico de Alinhamento - Agentes IA", 15, 20);
-            doc.setFontSize(10); doc.text(`Modelo: ${document.getElementById('modelo').value} | Data: ${new Date().toLocaleString()}`, 15, 28);
-
-            const secoes = [
-                {t: "CRITÉRIOS DE ACEITE (PO)", d: dadosPdf.po},
-                {t: "PLANO DE TESTES UI (QA)", d: dadosPdf.qa},
-                {t: "RELEASE NOTES (RM)", d: dadosPdf.rm},
-                {t: "DIMENSIONAMENTO (SIZING)", d: dadosPdf.sizing},
-                {t: "DISCUSSÃO TÉCNICA (WAR ROOM)", d: dadosPdf.warroom}
-            ];
-
-            let y = 40;
-            secoes.forEach(s => {
-                if(y > 250) { doc.addPage(); y = 20; }
-                doc.setFont("helvetica", "bold"); doc.text(s.t, 15, y); y += 7;
-                doc.setFont("helvetica", "normal");
-                const txt = doc.splitTextToSize(s.d, 180);
-                doc.text(txt, 15, y); y += (txt.length * 5) + 12;
+        try {
+            // Simulando progresso enquanto espera a resposta longa do backend
+            // Já que o fetch é uma promessa única, vamos quebrar o feedback visual
+            const r = await fetch('/api/processar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ requisito: req, modelo: mod })
             });
-            doc.save("Relatorio_Eficiencia_IA.pdf");
-        }
 
-        function verTab(evt, id) {
-            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            evt.currentTarget.classList.add('active');
+            // Como o backend é sequencial, atualizamos após a resposta
+            // Se quiser algo mais "vivo", o backend precisaria de WebSockets, 
+            // mas via HTTP normal, o truque é atualizar em saltos:
+            atualizarStatus("Validando Casos de Teste (QA)...", 40);
+
+            const d = await r.json();
+            if(!r.ok) throw new Error(d.error);
+
+            atualizarStatus("Calculando Sizing e Riscos...", 80);
+
+            dadosPdf = d;
+            document.getElementById('po').innerText = d.po;
+            document.getElementById('qa').innerText = d.qa;
+            document.getElementById('rm').innerText = d.rm;
+            document.getElementById('sizing').innerText = d.sizing;
+            document.getElementById('warroom').innerText = d.warroom;
+
+            atualizarStatus("Processamento Concluído!", 100);
+            pdf.style.display = 'block';
+
+        } catch (err) { 
+            alert("ERRO: " + err.message); 
+            atualizarStatus("Erro no processamento", 0);
+        } finally { 
+            btn.disabled = false; 
         }
-    </script>
-</body>
-</html>
+    }
+</script>
