@@ -5,24 +5,12 @@ app.use(express.json());
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// ROTA 1: Consultar Modelos Disponíveis
-app.get("/api/modelos", async (req, res) => {
-    try {
-        // Tenta listar modelos reais da API, se falhar entrega a lista estável homologada
-        res.json({ 
-            info: "Modelos homologados para esta esteira:", 
-            lista: ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"] 
-        });
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 // ROTA 2: Processar Esteira de Agentes
 app.post("/api/processar", async (req, res) => {
     try {
         const { requisito } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
+        const model = genAI.getGenerativeModel( { model: "gemini-3.1-pro-preview" },  { apiVersion: "v1beta" });
 
         // AGENTE 1: PO
         const promptPO = `Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em formato Gherkin. Proibido usar introduções, saudações ou frases de polidez. Requisito para processamento: ${requisito}`;
