@@ -3,92 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <link rel="icon" href="data:,">
-    <title>Sizing & IA Operational - Claupe Oliveira</title>
+    <title>Sizing & Operação IA - Claupe Oliveira</title>
     <style>
-        body { font-family: 'Inter', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box;}
+        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 20px; font-size: 16px; box-sizing: border-box; }
 
-        #btn-gerar { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        /* Botões */
+        .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .btn-sec { background: #64748b; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
+
         .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s linear infinite; display: none; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; }
-        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; }
+        /* Abas */
+        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
+        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; }
         .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .content { display: none; padding: 20px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-family: monospace; }
+        .tab-war { color: #db2777 !important; }
+
+        .content { display: none; padding: 25px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
         .content.active { display: block; }
         .warroom-style { border-left: 5px solid #db2777; background: #fff1f2; }
+        #model-list { display: none; font-family: monospace; font-size: 11px; padding: 10px; background: #e2e8f0; border-radius: 6px; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>Otimização de Processos com IA</h1>
-        <p>Insira a Product Story para o alinhamento dos agentes:</p>
-        <textarea id="requisito" placeholder="Ex: Reduzir testers de 60 para 40 via automação de regression..."></textarea>
+        <h1>🚀 Otimização Operacional com IA</h1>
 
-        <button id="btn-gerar" onclick="gerar()">
+        <button class="btn-sec" onclick="consultarModelos()">🔍 Verificar Modelos de IA</button>
+        <div id="model-list"></div>
+
+        <p>Insira o Requisito / Product Story:</p>
+        <textarea id="requisito" placeholder="Ex: Automatizar o fluxo de checkout e reduzir tempo de homologação..."></textarea>
+
+        <button class="btn-main" id="btn-gerar" onclick="gerar()">
             <div class="spinner" id="loader"></div>
-            <span id="btn-text">Processar Requisito</span>
+            <span id="btn-text">Iniciar Reunião dos Agentes</span>
         </button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="tab(event, 'res-po')">PO</button>
-        <button class="tab" onclick="tab(event, 'res-qa')">QA</button>
-        <button class="tab" onclick="tab(event, 'res-rm')">Release</button>
-        <button class="tab" onclick="tab(event, 'res-sizing')">Sizing</button>
-        <button class="tab" onclick="tab(event, 'res-warroom')" style="color:#db2777">🔥 War Room</button>
+        <button class="tab active" onclick="verTab(event, 'po')">PO (Analise)</button>
+        <button class="tab" onclick="verTab(event, 'qa')">QA (Testes)</button>
+        <button class="tab" onclick="verTab(event, 'rm')">Release (Risco)</button>
+        <button class="tab" onclick="verTab(event, 'sizing')">Sizing (Pricing)</button>
+        <button class="tab tab-war" onclick="verTab(event, 'warroom')">🔥 War Room</button>
     </div>
 
-    <div id="res-po" class="content active">Aguardando...</div>
-    <div id="res-qa" class="content">Aguardando...</div>
-    <div id="res-rm" class="content">Aguardando...</div>
-    <div id="res-sizing" class="content">Aguardando...</div>
-    <div id="res-warroom" class="content warroom-style">Aguardando discussão técnica...</div>
+    <div id="po" class="content active">Aguardando requisito...</div>
+    <div id="qa" class="content">Aguardando requisito...</div>
+    <div id="rm" class="content">Aguardando requisito...</div>
+    <div id="sizing" class="content">Aguardando requisito...</div>
+    <div id="warroom" class="content warroom-style">Discussão estratégica aparecerá aqui.</div>
 
     <script>
+        async function consultarModelos() {
+            const list = document.getElementById('model-list');
+            list.style.display = 'block';
+            list.innerText = 'Consultando API Google...';
+            try {
+                const res = await fetch('/api/modelos');
+                const data = await res.json();
+                list.innerText = data.info + " " + data.lista.join(' | ');
+            } catch {
+                list.innerText = 'Erro ao listar modelos.';
+            }
+        }
+
         async function gerar() {
-            const reqText = document.getElementById('requisito').value;
+            const req = document.getElementById('requisito').value;
             const btn = document.getElementById('btn-gerar');
             const loader = document.getElementById('loader');
             const btnText = document.getElementById('btn-text');
 
-            if (!reqText) return alert("Digite o requisito!");
+            if(!req) return alert("Por favor, descreva o requisito.");
 
             btn.disabled = true;
             loader.style.display = 'inline-block';
-            btnText.innerText = 'Agentes trabalhando...';
+            btnText.innerText = 'Processando Agentes...';
 
             try {
                 const response = await fetch('/api/processar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ requisito: reqText })
+                    body: JSON.stringify({ requisito: req })
                 });
 
-                // Aqui está o segredo: verificar se o retorno é JSON antes
-                const data = await response.json().catch(() => ({ error: "O servidor enviou uma resposta inválida (não JSON)." }));
+                const data = await response.json();
 
-                if (!response.ok) throw new Error(data.error || "Erro desconhecido");
-
-                document.getElementById('res-po').innerText = data.po;
-                document.getElementById('res-qa').innerText = data.qa;
-                document.getElementById('res-rm').innerText = data.rm;
-                document.getElementById('res-sizing').innerText = data.sizing;
-                document.getElementById('res-warroom').innerText = data.warroom;
+                document.getElementById('po').innerText = data.po;
+                document.getElementById('qa').innerText = data.qa;
+                document.getElementById('rm').innerText = data.rm;
+                document.getElementById('sizing').innerText = data.sizing;
+                document.getElementById('warroom').innerText = data.warroom;
 
             } catch (err) {
-                alert("Erro: " + err.message);
+                alert("Erro técnico no processamento.");
             } finally {
                 btn.disabled = false;
                 loader.style.display = 'none';
-                btnText.innerText = 'Processar Requisito';
+                btnText.innerText = 'Iniciar Reunião dos Agentes';
             }
         }
 
-        function tab(evt, id) {
+        function verTab(evt, id) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.getElementById(id).classList.add('active');
