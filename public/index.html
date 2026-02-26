@@ -1,56 +1,195 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
-const express = require("express");
-const app = express();
-app.use(express.json());
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Sizing & Operação IA - Governança Corporativa</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
+        .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
+        .input-text { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: 'Courier New', monospace; font-size: 14px; }
+        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; resize: vertical; }
 
-const delay = ms => new Promise(res => setTimeout(res, ms));
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1beta' });
+        /* Sistema de Status */
+        #status-box { display: none; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+        .status-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; font-weight: bold; }
+        .progress-container { width: 100%; background: #cbd5e1; height: 10px; border-radius: 5px; overflow: hidden; }
+        #progress-bar { width: 0%; background: #2563eb; height: 100%; transition: width 0.4s ease; }
+        .status-log { font-size: 12px; color: #475569; font-family: monospace; list-style: none; padding: 0; margin-top: 10px; }
+        .status-log li::before { content: "› "; color: #2563eb; }
 
-app.post("/api/processar", async (req, res) => {
-    const { requisito, modelo } = req.body;
-    const modeloFinal = modelo || "gemini-2.5-flash";
+        .actions { display: flex; gap: 10px; }
+        .btn-main { background: #2563eb; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 2; transition: filter 0.2s; }
+        .btn-main:hover { filter: brightness(1.1); }
+        .btn-main:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; }
 
-    console.log(`[${new Date().toISOString()}] 🚀 Iniciando Processamento: ${modeloFinal}`);
+        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; gap: 5px; }
+        .tab { padding: 12px 18px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; border-radius: 8px 8px 0 0; }
+        .tab.active { color: #2563eb; background: white; border-bottom: 3px solid #2563eb; margin-bottom: -2px; }
+        .content { display: none; padding: 25px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; border-radius: 0 0 8px 8px; }
+        .content.active { display: block; }
+    </style>
+</head>
+<body>
 
-    try {
-        const model = genAI.getGenerativeModel({ model: modeloFinal });
+    <div class="card">
+        <h2 style="margin-top:0">🚀 Esteira de Governança Técnica</h2>
 
-        // AGENTE 1: PO (DOCUMENTAÇÃO GHERKIN)
-        console.log("-> Operando: Agente PO");
-        const resPO = await model.generateContent(`Aja como PO Sênior. Forneça EXCLUSIVAMENTE Critérios de Aceite Gherkin para: ${requisito}. Proibido introduções.`);
-        const textoPO = resPO.response.text();
-        await delay(3000);
+        <div class="input-group">
+            <label>Motor de Inteligência (LLM):</label>
+            <input type="text" id="modelo" class="input-text" value="gemini-2.5-flash">
+        </div>
 
-        // AGENTE 2: QA (REPOSITÓRIO DE TESTES)
-        console.log("-> Operando: Agente QA");
-        const resQA = await model.generateContent(`Aja como QA Lead. Gere APENAS Casos de Teste UI com Steps e Resultados Esperados baseados em: ${textoPO}. Proibido saudações.`);
-        const textoQA = resQA.response.text();
-        await delay(3000);
+        <div class="input-group">
+            <label>Product Story / Requisição Operacional:</label>
+            <textarea id="requisito" placeholder="Descreva o requisito técnico para análise dos agentes..."></textarea>
+        </div>
 
-        // AGENTE 3: RM (RELATÓRIO DE IMPACTO)
-        console.log("-> Operando: Agente RM");
-        const resRM = await model.generateContent(`Aja como Release Manager. Forneça EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Sem textos introdutórios. Base: ${textoPO} e ${textoQA}`);
-        const textoRM = resRM.response.text();
-        await delay(3000);
+        <div id="status-box">
+            <div class="status-header">
+                <span id="status-text">Iniciando orquestração...</span>
+                <span id="status-percent">0%</span>
+            </div>
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <ul id="log-list" class="status-log"></ul>
+        </div>
 
-        // AGENTE 4: SIZING (CAPACITY PLANNING)
-        console.log("-> Operando: Agente Sizing");
-        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS tabela de esforço (H/M e Perfis), com 15% Gestão e 10% Buffer. Foco em otimização operacional. Base: ${textoQA}`);
-        const textoSizing = resSizing.response.text();
-        await delay(3000);
+        <div class="actions">
+            <button class="btn-main" id="btn-gerar" onclick="gerar()">Executar Ciclo de Agentes</button>
+            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Baixar Relatório PDF</button>
+        </div>
+    </div>
 
-        // AGENTE 5: WAR ROOM (COMITÊ DE RISCO)
-        console.log("-> Operando: Agente War Room");
-        const resWar = await model.generateContent(`Aja como Moderador Técnico. Gere diálogo de 4 falas entre as áreas sobre Riscos e Veredito GO/NO-GO. Base: ${textoPO}, ${textoQA} e ${textoSizing}`);
-        const textoWarRoom = resWar.response.text();
+    <div class="tabs">
+        <button class="tab active" onclick="verTab(event, 'po')">Requirements</button>
+        <button class="tab" onclick="verTab(event, 'qa')">Test Repository</button>
+        <button class="tab" onclick="verTab(event, 'rm')">Impact Analysis</button>
+        <button class="tab" onclick="verTab(event, 'sizing')">Capacity Sizing</button>
+        <button class="tab" onclick="verTab(event, 'warroom')">🔥 Decision Board</button>
+    </div>
 
-        console.log(`✅ Sucesso total.`);
-        res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
+    <div id="po" class="content active">Aguardando execução...</div>
+    <div id="qa" class="content">Aguardando execução...</div>
+    <div id="rm" class="content">Aguardando execução...</div>
+    <div id="sizing" class="content">Aguardando execução...</div>
+    <div id="warroom" class="content" style="background: #fff1f2;">Aguardando execução...</div>
 
-    } catch (error) {
-        console.error("❌ Erro de Processamento:", error.message);
-        res.status(500).json({ error: error.message });
-    }
-});
+    <script>
+        let dadosGlobais = null;
 
-module.exports = app;
+        function updateUIStatus(msg, percent) {
+            document.getElementById('status-box').style.display = 'block';
+            document.getElementById('status-text').innerText = msg;
+            document.getElementById('progress-bar').style.width = percent + '%';
+            document.getElementById('status-percent').innerText = percent + '%';
+
+            const log = document.getElementById('log-list');
+            const item = document.createElement('li');
+            item.innerText = msg;
+            log.prepend(item);
+        }
+
+        async function gerar() {
+            const req = document.getElementById('requisito').value;
+            const mod = document.getElementById('modelo').value;
+            const btn = document.getElementById('btn-gerar');
+            const pdf = document.getElementById('btn-pdf');
+
+            if(!req) return alert("Por favor, insira um requisito.");
+
+            btn.disabled = true;
+            pdf.style.display = 'none';
+            document.getElementById('log-list').innerHTML = '';
+
+            updateUIStatus("Acionando Agente PO (Gherkin)...", 10);
+
+            try {
+                // Intervalo para manter o usuário engajado enquanto o fetch ocorre
+                let p = 15;
+                const interval = setInterval(() => {
+                    if(p < 90) {
+                        p += 5;
+                        if(p == 30) updateUIStatus("Agente QA em decomposição de steps...", 35);
+                        if(p == 50) updateUIStatus("Release Manager avaliando impactos...", 55);
+                        if(p == 70) updateUIStatus("Calculando Capacity Sizing e Governança...", 75);
+                    }
+                }, 4000);
+
+                const response = await fetch('/api/processar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requisito: req, modelo: mod })
+                });
+
+                clearInterval(interval);
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error);
+
+                dadosGlobais = data;
+                updateUIStatus("Finalizando Comitê de Decisão Técnico...", 95);
+
+                document.getElementById('po').innerText = data.po;
+                document.getElementById('qa').innerText = data.qa;
+                document.getElementById('rm').innerText = data.rm;
+                document.getElementById('sizing').innerText = data.sizing;
+                document.getElementById('warroom').innerText = data.warroom;
+
+                updateUIStatus("Esteira concluída com sucesso!", 100);
+                pdf.style.display = 'block';
+
+            } catch (err) {
+                updateUIStatus("Erro crítico na execução.", 0);
+                alert("ERRO: " + err.message);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        function exportarPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const margin = 15;
+            let y = 20;
+
+            doc.setFontSize(18); doc.text("Relatório de Governança e Eficiência IA", margin, y);
+            y += 10;
+            doc.setFontSize(10); doc.text(`Gerado em: ${new Date().toLocaleString()} | Modelo: ${document.getElementById('modelo').value}`, margin, y);
+            y += 5;
+            doc.line(margin, y, 195, y);
+            y += 10;
+
+            const topics = [
+                {t: "REQUIREMENTS (PO)", d: dadosGlobais.po},
+                {t: "TEST REPOSITORY (QA)", d: dadosGlobais.qa},
+                {t: "IMPACT ANALYSIS (RELEASE)", d: dadosGlobais.rm},
+                {t: "CAPACITY SIZING", d: dadosGlobais.sizing},
+                {t: "DECISION BOARD (WAR ROOM)", d: dadosGlobais.warroom}
+            ];
+
+            topics.forEach(topic => {
+                if(y > 250) { doc.addPage(); y = 20; }
+                doc.setFont("helvetica", "bold"); doc.text(topic.t, margin, y);
+                y += 6;
+                doc.setFont("helvetica", "normal");
+                const splitTxt = doc.splitTextToSize(topic.d, 180);
+                doc.text(splitTxt, margin, y);
+                y += (splitTxt.length * 5) + 10;
+            });
+
+            doc.save("Relatorio_Estrategico_IA.pdf");
+        }
+
+        function verTab(evt, id) {
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            evt.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>
