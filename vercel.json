@@ -1,6 +1,7 @@
 {
   "version": 2,
   "rewrites": [
+    { "source": "/api/modelos", "destination": "/api/index.js" },
     { "source": "/api/processar", "destination": "/api/index.js" },
     { "source": "/(.*)", "destination": "/public/$1" }
   ]
