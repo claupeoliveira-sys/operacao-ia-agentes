@@ -8,28 +8,44 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 app.post("/api/processar", async (req, res) => {
     try {
         const { requisito } = req.body;
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        if (!process.env.GEMINI_API_KEY) throw new Error("API KEY faltando nas variáveis de ambiente.");
 
-        // AGENTE 1: PO (Critérios de Aceite)
-        const promptPO = `Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em Gherkin. Proibido introduções ou saudações. Requisito: ${requisito}`;
-        const resultPO = await model.generateContent(promptPO);
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+
+        // AGENTE 1: PO
+        const resultPO = await model.generateContent(`Aja como PO Sênior. Gere APENAS Critérios de Aceite em Gherkin. Sem saudações. Requisito: ${requisito}`);
         const textoPO = resultPO.response.text();
 
-        // AGENTE 2: QA (Plano de Testes)
-        const promptQA = `Aja como Analista de QA Sênior. Com base nos Critérios abaixo, gere APENAS o Plano de Testes estruturado. Sem diálogos. Critérios: ${textoPO}`;
-        const resultQA = await model.generateContent(promptQA);
+        // AGENTE 2: QA
+        const resultQA = await model.generateContent(`Aja como Analista de QA. Gere APENAS o Plano de Testes estruturado baseado nos critérios: ${textoPO}`);
         const textoQA = resultQA.response.text();
 
-        // AGENTE 3: RELEASE MANAGER (Relatório de Risco)
-        const promptRM = `Aja como Release Manager. Gere um relatório executivo técnico para diretoria. Proibido introduções. ESTRUTURA: ### RELATÓRIO DE RELEASE | Escopo | Análise de Risco | Impacto. Referências: ${textoPO} e ${textoQA}`;
-        const resultRM = await model.generateContent(promptRM);
+        // AGENTE 3: RELEASE MANAGER
+        const resultRM = await model.generateContent(`Aja como Release Manager. Gere um relatório técnico (Escopo, Risco, Impacto) baseado em: ${textoPO} e ${textoQA}`);
         const textoRM = resultRM.response.text();
 
-        // AGENTE 4: SIZING (Precificação)
-        const promptSizing = `Aja como Gerente de Sizing e Costing. Gere uma estimativa técnica para faturamento. Horas, Perfis, Senioridade. Proibido introduções. REGRAS: 15% Gestão e 10% Garantia. Referências: ${textoPO} e ${textoQA}`;
-        const resultSizing = await model.generateContent(promptSizing);
+        // AGENTE 4: SIZING (Baseado no seu Case de Sizing)
+        const resultSizing = await model.generateContent(`Aja como Gerente de Sizing. Estime horas e perfis técnicos (Jr/Pl/Sr) com 15% Gestão e 10% Garantia. Referência: ${textoQA}`);
         const textoSizing = resultSizing.response.text();
 
-        // AGENTE 5: WAR ROOM (Discussão)
-        const promptWarRoom = 
+        // AGENTE 5: WAR ROOM (A "Discussão" solicitada)
+        const resultWarRoom = await model.generateContent(`Modere uma discussão técnica entre PO, QA e Sizing sobre este projeto. Gere 4 falas curtas e uma decisão final. Base: ${textoPO} e ${textoSizing}`);
+        const textoWarRoom = resultWarRoom.response.text();
 
+        // Retorno garantido como JSON
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).json({
+            po: textoPO,
+            qa: textoQA,
+            rm: textoRM,
+            sizing: textoSizing,
+            warroom: textoWarRoom
+        });
+
+    } catch (error) {
+        console.error("ERRO BACKEND:", error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+module.exports = app;
