@@ -13,7 +13,15 @@ app.post("/api/processar", async (req, res) => {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
         // AGENTE 1: PO
-        const resultPO = await model.generateContent(`Aja como PO Sênior. Gere APENAS Critérios de Aceite em Gherkin. Sem saudações. Requisito: ${requisito}`);
+        const resultPO = await model.generateContent(`Aja como um Product Owner Sênior. Sua saída deve conter APENAS o documento técnico de Critérios de Aceite em formato Gherkin. Proibido usar introduções, saudações ou frases de polidez. Use markdown direto para facilitar a leitura.
+
+ESTRUTURA:
+
+CRITÉRIOS DE ACEITE
+Cenário: [Nome do Cenário] Dado que [contexto inicial] Quando [ação executada] Então [resultado esperado]
+
+Requisito para processamento: : ${requisito}`);
+        
         const textoPO = resultPO.response.text();
 
         // AGENTE 2: QA
