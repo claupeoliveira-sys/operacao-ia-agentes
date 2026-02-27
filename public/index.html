@@ -2,106 +2,89 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sizing & Operação IA - Governança Corporativa</title>
+    <title>Sizing & Operação IA - Claupe Oliveira</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
+        body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
-        .input-text { width: 100%; padding: 10px; border-radius: 6px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: monospace; }
-        textarea { width: 100%; height: 120px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
+        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
 
-        /* Log Dinâmico e Barra de Progresso */
-        #status-box { display: none; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
-        .progress-bg { background: #cbd5e1; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
-        #progress-bar { width: 0%; background: #2563eb; height: 100%; transition: width 0.4s ease; }
-        .log-list { font-size: 12px; color: #475569; font-family: monospace; list-style: none; padding: 0; margin: 0; }
-        .log-list li::before { content: "› "; color: #2563eb; font-weight: bold; }
+        #status-box { display: none; background: #1e293b; color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; font-family: monospace; }
+        .progress-container { background: #475569; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
+        #progress-bar { width: 0%; background: #38bdf8; height: 100%; transition: width 0.5s; }
+        #log-list { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.6; }
+        #log-list li { margin-bottom: 4px; display: flex; align-items: center; }
+        #log-list li::before { content: "✔"; color: #38bdf8; margin-right: 10px; font-weight: bold; }
 
-        .actions { display: flex; gap: 10px; }
-        .btn-main { background: #1e293b; color: white; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 2; }
-        .btn-pdf { background: #059669; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; flex: 1; display: none; }
-
-        .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; overflow-x: auto; }
-        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; white-space: nowrap; }
+        .tabs { display: flex; margin-top: 25px; border-bottom: 2px solid #e2e8f0; }
+        .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; }
         .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
-        .content { display: none; padding: 25px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; line-height: 1.6; }
+        .content { display: none; padding: 20px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; }
         .content.active { display: block; }
 
-        /* Estilo do PDF Oculto (Big Four Style) */
-        #pdf-template { display: none; padding: 40px; color: #000; }
-        .pdf-h { border-bottom: 2px solid #1e293b; margin-bottom: 20px; }
+        .btn-main { background: #2563eb; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
+        .btn-pdf { background: #059669; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: none; }
+
+        /* Template PDF Oculto */
+        #pdf-template { display: none; padding: 40px; }
+        .pdf-section { margin-bottom: 20px; border-left: 2px solid #2563eb; padding-left: 15px; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h1>🚀 Esteira de Governança IA</h1>
-
-        <div class="input-group">
-            <label>Engine:</label>
-            <input type="text" id="modelo" class="input-text" value="gemini-2.5-flash">
-        </div>
-
-        <div class="input-group">
-            <label>Requisito:</label>
-            <textarea id="requisito" placeholder="Ex: Automação do carrinho de compras..."></textarea>
-        </div>
+        <h2>🚀 Esteira de Governança IA</h2>
+        <input type="text" id="modelo" value="gemini-2.5-flash" style="width:100%; padding:10px; margin-bottom:10px">
+        <textarea id="requisito" placeholder="Insira o requisito técnico..."></textarea>
 
         <div id="status-box">
-            <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold;">
-                <span id="status-text">Iniciando agentes...</span>
+            <div style="display:flex; justify-content:space-between">
+                <span id="status-msg">Orquestrando agentes...</span>
                 <span id="status-pct">0%</span>
             </div>
-            <div class="progress-bg"><div id="progress-bar"></div></div>
-            <ul id="log-list" class="log-list"></ul>
+            <div class="progress-container"><div id="progress-bar"></div></div>
+            <ul id="log-list"></ul>
         </div>
 
-        <div class="actions">
-            <button class="btn-main" id="btn-gerar" onclick="gerar()">Executar Esteira</button>
-            <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar PDF Premium</button>
-        </div>
+        <button class="btn-main" id="btn-gerar" onclick="gerar()">Iniciar Processamento</button>
+        <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório Corporativo</button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="verTab(event, 'po')">PO</button>
-        <button class="tab" onclick="verTab(event, 'qa')">QA</button>
+        <button class="tab active" onclick="verTab(event, 'po')">Requisitos</button>
+        <button class="tab" onclick="verTab(event, 'qa')">Plano QA</button>
         <button class="tab" onclick="verTab(event, 'sizing')">Sizing</button>
-        <button class="tab" style="color:#b91c1c" onclick="verTab(event, 'audit')">Auditoria</button>
+        <button class="tab" onclick="verTab(event, 'audit')">🛡️ Auditoria</button>
         <button class="tab" onclick="verTab(event, 'war')">War Room</button>
     </div>
 
     <div id="po" class="content active">Aguardando...</div>
-    <div id="qa" class="content">Aguardando...</div>
-    <div id="sizing" class="content">Aguardando...</div>
-    <div id="audit" class="content" style="background:#fef2f2">Aguardando...</div>
-    <div id="war" class="content">Aguardando...</div>
+    <div id="qa" class="content">...</div>
+    <div id="sizing" class="content">...</div>
+    <div id="audit" class="content" style="background:#fef2f2">...</div>
+    <div id="war" class="content">...</div>
 
-    <!-- TEMPLATE PARA PDF -->
+    <!-- ÁREA DO PDF -->
     <div id="pdf-template">
-        <div class="pdf-h">
-            <h2>Relatório de Governança Técnica</h2>
-            <p>Gerado por Esteira de IA | Data: <span id="pdf-data"></span></p>
-        </div>
-        <h3>1. Critérios de Aceite (PO)</h3><div id="tp-po"></div><br>
-        <h3>2. Plano de Testes (QA)</h3><div id="tp-qa"></div><br>
-        <h3>3. Capacity Planning (Sizing)</h3><div id="tp-sz"></div><br>
-        <h3 style="color:#b91c1c">4. Auditoria de Sanitização</h3><div id="tp-au"></div><br>
-        <h3>5. Veredito Final (War Room)</h3><div id="tp-wr"></div>
+        <h1 style="border-bottom: 2px solid #000">Relatório de Governança IA</h1>
+        <div class="pdf-section"><h3>REQUISITOS (PO)</h3><div id="p-po"></div></div>
+        <div class="pdf-section"><h3>PLANO DE TESTES (QA)</h3><div id="p-qa"></div></div>
+        <div class="pdf-section"><h3>DIMENSIONAMENTO (SIZING)</h3><div id="p-sz"></div></div>
+        <div class="pdf-section"><h3>AUDITORIA DE RISCO</h3><div id="p-au"></div></div>
+        <div class="pdf-section"><h3>DECISÃO (WAR ROOM)</h3><div id="p-wr"></div></div>
     </div>
 
     <script>
         let dadosRaw = null;
 
-        function logStatus(msg, pct) {
-            document.getElementById('status-box').style.display = 'block';
-            document.getElementById('status-text').innerText = msg;
+        function addLog(msg, pct) {
+            const list = document.getElementById('log-list');
+            const item = document.createElement('li');
+            item.innerText = msg;
+            list.appendChild(item);
+            document.getElementById('status-msg').innerText = msg;
             document.getElementById('status-pct').innerText = pct + '%';
             document.getElementById('progress-bar').style.width = pct + '%';
-            const li = document.createElement('li');
-            li.innerText = msg;
-            document.getElementById('log-list').prepend(li);
         }
 
         async function gerar() {
@@ -111,21 +94,22 @@
             const btn = document.getElementById('btn-gerar');
             btn.disabled = true;
             document.getElementById('log-list').innerHTML = '';
+            document.getElementById('status-box').style.display = 'block';
 
-            logStatus("Acionando Agente PO (Requisitos)...", 10);
+            // Logs incrementais baseados no tempo estimado de resposta
+            addLog("Mapeando Requisitos (PO)...", 10);
+
+            setTimeout(() => addLog("Gerando Engenharia de Testes (QA)...", 30), 4000);
+            setTimeout(() => addLog("Calculando Dimensionamento (Sizing)...", 50), 10000);
+            setTimeout(() => addLog("Iniciando Auditoria de Sanitização...", 75), 18000);
+            setTimeout(() => addLog("Consolidando Veredito (War Room)...", 90), 24000);
 
             try {
-                // Simulação de progresso enquanto o backend trabalha
-                let p = 20;
-                const iv = setInterval(() => { if(p < 90) { p += 5; logStatus(p > 70 ? "Auditor analisando coerência..." : "Processando agentes...", p); } }, 3000);
-
                 const r = await fetch('/api/processar', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({requisito: req, modelo: document.getElementById('modelo').value})
                 });
-
-                clearInterval(iv);
                 const d = await r.json();
                 if(!r.ok) throw new Error(d.error);
 
@@ -136,28 +120,23 @@
                 document.getElementById('audit').innerText = d.auditoria;
                 document.getElementById('war').innerText = d.warroom;
 
-                logStatus("Relatório finalizado com sucesso!", 100);
+                addLog("Relatório Finalizado!", 100);
                 document.getElementById('btn-pdf').style.display = 'block';
-
-            } catch (e) { alert(e.message); logStatus("Erro na esteira.", 0); }
+            } catch (e) { alert(e.message); }
             finally { btn.disabled = false; }
         }
 
         function exportarPDF() {
-            document.getElementById('pdf-data').innerText = new Date().toLocaleString();
-            document.getElementById('tp-po').innerText = dadosRaw.po;
-            document.getElementById('tp-qa').innerText = dadosRaw.qa;
-            document.getElementById('tp-sz').innerText = dadosRaw.sizing;
-            document.getElementById('tp-au').innerText = dadosRaw.auditoria;
-            document.getElementById('tp-wr').innerText = dadosRaw.warroom;
+            document.getElementById('p-po').innerText = dadosRaw.po;
+            document.getElementById('p-qa').innerText = dadosRaw.qa;
+            document.getElementById('p-sz').innerText = dadosRaw.sizing;
+            document.getElementById('p-au').innerText = dadosRaw.auditoria;
+            document.getElementById('p-wr').innerText = dadosRaw.warroom;
 
             const el = document.getElementById('pdf-template');
             el.style.display = 'block';
-            html2pdf().set({
-                margin: 15,
-                filename: 'Relatorio_IA_Governança.pdf',
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(el).save().then(() => el.style.display = 'none');
+            html2pdf().set({ margin: 15, filename: 'Relatorio_IA.pdf', jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } })
+                .from(el).save().then(() => el.style.display = 'none');
         }
 
         function verTab(e, id) {
