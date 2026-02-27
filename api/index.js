@@ -12,6 +12,8 @@ app.post("/api/processar", async (req, res) => {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     try {
+        console.log("-> Iniciando Esteira v3.1");
+
         const resPO = await model.generateContent(agentes.po(requisito, profundidade));
         const textoPO = resPO.response.text();
         await delay(3000);
@@ -33,6 +35,7 @@ app.post("/api/processar", async (req, res) => {
 
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
     } catch (error) {
+        console.error("Erro na API:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
