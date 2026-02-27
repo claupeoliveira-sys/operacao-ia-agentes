@@ -10,42 +10,46 @@ app.post("/api/processar", async (req, res) => {
     const { requisito, modelo } = req.body;
     const modeloFinal = modelo || "gemini-2.5-flash";
 
+    console.log(`[${new Date().toISOString()}] 🚀 Processando com: ${modeloFinal}`);
+
     try {
         const model = genAI.getGenerativeModel({ model: modeloFinal });
 
-        // AGENTE 1: PO
-        const resPO = await model.generateContent(`Aja como PO Sênior. Forneça EXCLUSIVAMENTE Critérios de Aceite Gherkin para: ${requisito}. Proibido introduções.`);
+        console.log("-> Agente PO...");
+        const resPO = await model.generateContent(`Aja como um Product Owner Sênior. Produza EXCLUSIVAMENTE Critérios de Aceite em formato Gherkin: ${requisito}. Proibido introduções.`);
         const textoPO = resPO.response.text();
-        await delay(2500);
+        await delay(3000);
 
-        // AGENTE 2: QA
-        const resQA = await model.generateContent(`Aja como QA Lead. Gere APENAS Casos de Teste UI com Steps baseados em: ${textoPO}. Proibido saudações.`);
+        console.log("-> Agente QA...");
+        const resQA = await model.generateContent(`Aja como QA Sênior. Gere APENAS o Plano de Testes detalhado com Steps, Entradas e Resultados Esperados: ${textoPO}`);
         const textoQA = resQA.response.text();
-        await delay(2500);
+        await delay(3000);
 
-        // AGENTE 3: RM (RELEASE)
-        const resRM = await model.generateContent(`Aja como Release Manager. Forneça EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Base: ${textoPO} e ${textoQA} Proibido introduções.`);
+        console.log("-> Agente RM...");
+        const resRM = await model.generateContent(`Aja como Release Manager. Produza EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Base: ${textoPO} e ${textoQA}`);
         const textoRM = resRM.response.text();
-        await delay(2500);
+        await delay(3000);
 
-        // AGENTE 4: SIZING
-        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS tabela de esforço (H/M e Perfis), com 15% Gestão e 10% Buffer. Base: ${textoQA} Proibido introduções.`);
+        console.log("-> Agente Sizing...");
+        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS uma tabela de esforço (H/M e Perfis), com 15% Gestão e 10% Buffer. Base: ${textoQA}`);
         const textoSizing = resSizing.response.text();
-        await delay(2500);
+        await delay(3000);
 
-        // --- NOVO AGENTE 4.5: AUDITOR (SANITIZAÇÃO) ---
-        console.log("-> Operando: Agente Auditor de Sanitização");
-        const resAudit = await model.generateContent(`Aja como Auditor de Qualidade e Operações. Analise se o SIZING (${textoSizing}) é suficiente para cobrir os CASOS DE TESTE (${textoQA}). Aponte riscos de subestimação ou gaps de cobertura. Seja EXTREMAMENTE técnico e direto.`);
+        // --- AGENTE DE SANITIZAÇÃO (Auditoria de Coerência) ---
+        console.log("-> Agente Auditoria...");
+        const resAudit = await model.generateContent(`Aja como Auditor de Qualidade. Analise tecnicamente se o SIZING (${textoSizing}) é suficiente para os TESTES (${textoQA}). Aponte riscos ou gaps. Seja direto.`);
         const textoAudit = resAudit.response.text();
-        await delay(2500);
+        await delay(3000);
 
-        // AGENTE 5: WAR ROOM
-        const resWar = await model.generateContent(`Aja como Moderador. Gere diálogo de 4 falas sobre Riscos e Veredito GO/NO-GO baseado no relatório anterior e na Auditoria: ${textoAudit} Proibido introduções.`);
+        console.log("-> Agente War Room...");
+        const resWar = await model.generateContent(`Aja como Moderador. Gere diálogo de 4 falas sobre Riscos e Veredito GO/NO-GO baseado no relatório e auditoria: ${textoAudit}`);
         const textoWarRoom = resWar.response.text();
 
+        console.log(`✅ Sucesso com ${modeloFinal}`);
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, auditoria: textoAudit, warroom: textoWarRoom });
 
     } catch (error) {
+        console.error("❌ Erro:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
