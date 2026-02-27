@@ -86,45 +86,33 @@
             document.getElementById('status-pct').innerText = pct + '%';
             document.getElementById('progress-bar').style.width = pct + '%';
         }
+// Trecho dentro da função gerar() no index.html atualizado
+async function gerar() {
+    // ... (restante do código anterior)
 
-        async function gerar() {
-            const req = document.getElementById('requisito').value;
-            if(!req) return alert("Insira o requisito!");
+    addLog("Iniciando Auditoria e Comitê War Room...", 90);
 
-            const btn = document.getElementById('btn-gerar');
-            btn.disabled = true;
-            document.getElementById('log-list').innerHTML = '';
-            document.getElementById('status-box').style.display = 'block';
+    // Timer de segurança para a etapa final demorada
+    const waitTimer = setTimeout(() => {
+        addLog("⚙️ Processamento denso em andamento. Aguarde mais alguns instantes...", 95);
+    }, 15000); // Se em 15 segundos não terminou o War Room, avisa o usuário.
 
-            // Logs incrementais baseados no tempo estimado de resposta
-            addLog("Mapeando Requisitos (PO)...", 10);
+    try {
+        const r = await fetch('/api/processar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({requisito: req, modelo: document.getElementById('modelo').value})
+        });
 
-            setTimeout(() => addLog("Gerando Engenharia de Testes (QA)...", 30), 4000);
-            setTimeout(() => addLog("Calculando Dimensionamento (Sizing)...", 50), 10000);
-            setTimeout(() => addLog("Iniciando Auditoria de Sanitização...", 75), 18000);
-            setTimeout(() => addLog("Consolidando Veredito (War Room)...", 90), 24000);
-
-            try {
-                const r = await fetch('/api/processar', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({requisito: req, modelo: document.getElementById('modelo').value})
-                });
-                const d = await r.json();
-                if(!r.ok) throw new Error(d.error);
-
-                dadosRaw = d;
-                document.getElementById('po').innerText = d.po;
-                document.getElementById('qa').innerText = d.qa;
-                document.getElementById('sizing').innerText = d.sizing;
-                document.getElementById('audit').innerText = d.auditoria;
-                document.getElementById('war').innerText = d.warroom;
-
-                addLog("Relatório Finalizado!", 100);
-                document.getElementById('btn-pdf').style.display = 'block';
-            } catch (e) { alert(e.message); }
-            finally { btn.disabled = false; }
-        }
+        clearTimeout(waitTimer); // Limpa o aviso se o servidor responder rápido
+        const d = await r.json();
+        // ... (restante da lógica de preenchimento)
+        addLog("Relatório Finalizado!", 100);
+    } catch (e) {
+        clearTimeout(waitTimer);
+        addLog("Erro na execução.", 0);
+    }
+}
 
         function exportarPDF() {
             document.getElementById('p-po').innerText = dadosRaw.po;
