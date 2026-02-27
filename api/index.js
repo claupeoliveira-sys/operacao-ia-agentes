@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const express = require("express");
-const agentes = require("./agentes"); // Importante: Garante a modularização 2.0
+const agentes = require("./agentes");
 const app = express();
 app.use(express.json());
 
@@ -11,40 +11,30 @@ app.post("/api/processar", async (req, res) => {
     const { requisito, modelo } = req.body;
     const modeloFinal = modelo || "gemini-2.5-flash";
 
-    console.log(`[${new Date().toISOString()}] 🚀 Processando com: ${modeloFinal}`);
-
     try {
         const model = genAI.getGenerativeModel({ model: modeloFinal });
 
-        console.log("-> Agente PO...");
         const resPO = await model.generateContent(agentes.po(requisito));
         const textoPO = resPO.response.text();
         await delay(3000);
 
-        console.log("-> Agente QA...");
         const resQA = await model.generateContent(agentes.qa(textoPO));
         const textoQA = resQA.response.text();
         await delay(3000);
 
-        console.log("-> Agente RM...");
         const resRM = await model.generateContent(agentes.rm(textoPO, textoQA));
         const textoRM = resRM.response.text();
         await delay(3000);
 
-        console.log("-> Agente Sizing...");
         const resSizing = await model.generateContent(agentes.sizing(textoQA));
         const textoSizing = resSizing.response.text();
         await delay(3000);
 
-        console.log("-> Agente War Room...");
         const resWar = await model.generateContent(agentes.warroom(textoPO, textoQA, textoSizing));
         const textoWarRoom = resWar.response.text();
 
-        console.log(`✅ Sucesso com ${modeloFinal}`);
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
-
     } catch (error) {
-        console.error("❌ Erro:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
