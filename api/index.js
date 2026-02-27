@@ -10,46 +10,41 @@ app.post("/api/processar", async (req, res) => {
     const { requisito, modelo } = req.body;
     const modeloFinal = modelo || "gemini-2.5-flash";
 
-    console.log(`[${new Date().toISOString()}] 🚀 Processando com: ${modeloFinal}`);
-
     try {
         const model = genAI.getGenerativeModel({ model: modeloFinal });
 
-        console.log("-> Agente PO...");
-        const resPO = await model.generateContent(`Aja como um Product Owner Sênior. Produza EXCLUSIVAMENTE Critérios de Aceite em formato Gherkin: ${requisito}. Proibido introduções.`);
+        // AGENTE 1: PO
+        const resPO = await model.generateContent(`Aja como PO Sênior. Forneça EXCLUSIVAMENTE Critérios de Aceite Gherkin: ${requisito}. Proibido saudações.`);
         const textoPO = resPO.response.text();
         await delay(3000);
 
-        console.log("-> Agente QA...");
-        const resQA = await model.generateContent(`Aja como QA Sênior. Gere APENAS o Plano de Testes detalhado com Steps, Entradas e Resultados Esperados: ${textoPO}`);
+        // AGENTE 2: QA
+        const resQA = await model.generateContent(`Aja como QA Sênior. Gere APENAS Plano de Testes com Steps e Resultados Esperados: ${textoPO}`);
         const textoQA = resQA.response.text();
         await delay(3000);
 
-        console.log("-> Agente RM...");
-        const resRM = await model.generateContent(`Aja como Release Manager. Produza EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Base: ${textoPO} e ${textoQA}`);
+        // AGENTE 3: RM (RELEASE)
+        const resRM = await model.generateContent(`Aja como Release Manager. Forneça EXCLUSIVAMENTE Relatório de Impacto e Release Notes: ${textoQA}`);
         const textoRM = resRM.response.text();
         await delay(3000);
 
-        console.log("-> Agente Sizing...");
-        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS uma tabela de esforço (H/M e Perfis), com 15% Gestão e 10% Buffer. Base: ${textoQA}`);
+        // AGENTE 4: SIZING
+        const resSizing = await model.generateContent(`Aja como Gerente de Sizing. Gere APENAS tabela de esforço (H/M e Perfis), 15% Gestão e 10% Buffer. Base: ${textoQA}`);
         const textoSizing = resSizing.response.text();
         await delay(3000);
 
-        // --- AGENTE DE SANITIZAÇÃO (Auditoria de Coerência) ---
-        console.log("-> Agente Auditoria...");
-        const resAudit = await model.generateContent(`Aja como Auditor de Qualidade. Analise tecnicamente se o SIZING (${textoSizing}) é suficiente para os TESTES (${textoQA}). Aponte riscos ou gaps. Seja direto.`);
+        // AGENTE 4.5: AUDITOR (SANITIZAÇÃO)
+        const resAudit = await model.generateContent(`Aja como Auditor de Qualidade. Cruze o SIZING (${textoSizing}) com os TESTES (${textoQA}). Aponte gaps ou riscos de subestimação.`);
         const textoAudit = resAudit.response.text();
         await delay(3000);
 
-        console.log("-> Agente War Room...");
-        const resWar = await model.generateContent(`Aja como Moderador. Gere diálogo de 4 falas sobre Riscos e Veredito GO/NO-GO baseado no relatório e auditoria: ${textoAudit}`);
+        // AGENTE 5: WAR ROOM
+        const resWar = await model.generateContent(`Aja como Moderador. Diálogo de 4 falas sobre Riscos e Veredito GO/NO-GO baseado no relatório e auditoria: ${textoAudit}`);
         const textoWarRoom = resWar.response.text();
 
-        console.log(`✅ Sucesso com ${modeloFinal}`);
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, auditoria: textoAudit, warroom: textoWarRoom });
 
     } catch (error) {
-        console.error("❌ Erro:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
