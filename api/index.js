@@ -1,5 +1,6 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const express = require("express");
+const agentes = require("./agentes"); // Importante: Garante a modularização 2.0
 const app = express();
 app.use(express.json());
 
@@ -9,6 +10,8 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: '
 app.post("/api/processar", async (req, res) => {
     const { requisito, modelo } = req.body;
     const modeloFinal = modelo || "gemini-2.5-flash";
+
+    console.log(`[${new Date().toISOString()}] 🚀 Processando com: ${modeloFinal}`);
 
     try {
         const model = genAI.getGenerativeModel({ model: modeloFinal });
@@ -41,6 +44,7 @@ app.post("/api/processar", async (req, res) => {
         res.json({ po: textoPO, qa: textoQA, rm: textoRM, sizing: textoSizing, warroom: textoWarRoom });
 
     } catch (error) {
+        console.error("❌ Erro:", error.message);
         res.status(500).json({ error: error.message });
     }
 });
