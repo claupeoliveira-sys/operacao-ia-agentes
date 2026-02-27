@@ -2,81 +2,62 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sizing & Operação IA - Claupe Oliveira</title>
+    <title>Sizing & Operação IA - Versão 3.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
-        textarea { width: 100%; height: 100px; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
-
         #status-box { display: none; background: #1e293b; color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; font-family: monospace; }
         .progress-container { background: #475569; height: 8px; border-radius: 4px; margin: 10px 0; overflow: hidden; }
         #progress-bar { width: 0%; background: #38bdf8; height: 100%; transition: width 0.5s; }
-        #log-list { list-style: none; padding: 0; margin: 0; font-size: 13px; line-height: 1.6; }
-        #log-list li { margin-bottom: 4px; display: flex; align-items: center; }
-        #log-list li::before { content: "✔"; color: #38bdf8; margin-right: 10px; font-weight: bold; }
-
+        #log-list { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+        #log-list li::before { content: "✔"; color: #38bdf8; margin-right: 10px; }
         .tabs { display: flex; margin-top: 25px; border-bottom: 2px solid #e2e8f0; }
         .tab { padding: 12px 20px; cursor: pointer; border: none; background: none; font-weight: 600; color: #64748b; }
         .tab.active { color: #2563eb; border-bottom: 3px solid #2563eb; }
         .content { display: none; padding: 20px; background: white; border: 1px solid #e2e8f0; border-top: none; white-space: pre-wrap; font-size: 14px; }
         .content.active { display: block; }
-
         .btn-main { background: #2563eb; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
         .btn-pdf { background: #059669; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: none; }
-
-        /* Template PDF Oculto */
         #pdf-template { display: none; padding: 40px; }
-        .pdf-section { margin-bottom: 20px; border-left: 2px solid #2563eb; padding-left: 15px; }
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h2>🚀 Esteira de Governança IA</h2>
-        <input type="text" id="modelo" value="gemini-2.5-flash" style="width:100%; padding:10px; margin-bottom:10px">
-        <textarea id="requisito" placeholder="Insira o requisito técnico..."></textarea>
-
+        <h2>🚀 Esteira de Governança IA 3.0</h2>
+        <input type="text" id="modelo" value="gemini-2.5-flash" style="width:100%; padding:10px; margin-bottom:10px; border-radius:6px; border:1px solid #cbd5e1;">
+        <textarea id="requisito" placeholder="Insira o requisito técnico..." style="width:100%; height:100px; padding:15px; border-radius:8px; border:1px solid #cbd5e1; margin-bottom:20px;"></textarea>
         <div id="status-box">
             <div style="display:flex; justify-content:space-between">
-                <span id="status-msg">Orquestrando agentes...</span>
+                <span id="status-msg">Iniciando...</span>
                 <span id="status-pct">0%</span>
             </div>
             <div class="progress-container"><div id="progress-bar"></div></div>
             <ul id="log-list"></ul>
         </div>
-
         <button class="btn-main" id="btn-gerar" onclick="gerar()">Iniciar Processamento</button>
-        <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório Corporativo</button>
+        <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório 3.0</button>
     </div>
 
     <div class="tabs">
-        <button class="tab active" onclick="verTab(event, 'po')">Requisitos</button>
-        <button class="tab" onclick="verTab(event, 'qa')">Plano QA</button>
+        <button class="tab active" onclick="verTab(event, 'po')">PO</button>
+        <button class="tab" onclick="verTab(event, 'qa')">QA</button>
         <button class="tab" onclick="verTab(event, 'sizing')">Sizing</button>
-        <button class="tab" onclick="verTab(event, 'audit')">🛡️ Auditoria</button>
         <button class="tab" onclick="verTab(event, 'war')">War Room</button>
     </div>
 
     <div id="po" class="content active">Aguardando...</div>
     <div id="qa" class="content">...</div>
     <div id="sizing" class="content">...</div>
-    <div id="audit" class="content" style="background:#fef2f2">...</div>
     <div id="war" class="content">...</div>
 
-    <!-- ÁREA DO PDF -->
     <div id="pdf-template">
-        <h1 style="border-bottom: 2px solid #000">Relatório de Governança IA</h1>
-        <div class="pdf-section"><h3>REQUISITOS (PO)</h3><div id="p-po"></div></div>
-        <div class="pdf-section"><h3>PLANO DE TESTES (QA)</h3><div id="p-qa"></div></div>
-        <div class="pdf-section"><h3>DIMENSIONAMENTO (SIZING)</h3><div id="p-sz"></div></div>
-        <div class="pdf-section"><h3>AUDITORIA DE RISCO</h3><div id="p-au"></div></div>
-        <div class="pdf-section"><h3>DECISÃO (WAR ROOM)</h3><div id="p-wr"></div></div>
+        <h1 style="border-bottom: 2px solid #000">Relatório Executivo IA 3.0</h1>
+        <div id="p-po"></div><div id="p-qa"></div><div id="p-sz"></div><div id="p-wr"></div>
     </div>
 
     <script>
         let dadosRaw = null;
-
         function addLog(msg, pct) {
             const list = document.getElementById('log-list');
             const item = document.createElement('li');
@@ -86,45 +67,48 @@
             document.getElementById('status-pct').innerText = pct + '%';
             document.getElementById('progress-bar').style.width = pct + '%';
         }
-// Trecho dentro da função gerar() no index.html atualizado
-async function gerar() {
-    // ... (restante do código anterior)
 
-    addLog("Iniciando Auditoria e Comitê War Room...", 90);
+        async function gerar() {
+            const req = document.getElementById('requisito').value;
+            if(!req) return alert("Insira o requisito!");
+            document.getElementById('btn-gerar').disabled = true;
+            document.getElementById('log-list').innerHTML = '';
+            document.getElementById('status-box').style.display = 'block';
 
-    // Timer de segurança para a etapa final demorada
-    const waitTimer = setTimeout(() => {
-        addLog("⚙️ Processamento denso em andamento. Aguarde mais alguns instantes...", 95);
-    }, 15000); // Se em 15 segundos não terminou o War Room, avisa o usuário.
+            addLog("Mapeando Requisitos (PO)...", 10);
+            setTimeout(() => addLog("Gerando Engenharia de Testes (QA)...", 30), 4000);
+            setTimeout(() => addLog("Calculando Dimensionamento (Sizing)...", 55), 10000);
 
-    try {
-        const r = await fetch('/api/processar', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({requisito: req, modelo: document.getElementById('modelo').value})
-        });
+            const waitTimer = setTimeout(() => {
+                addLog("⚙️ Processamento denso (War Room). Aguarde mais instantes...", 90);
+            }, 18000);
 
-        clearTimeout(waitTimer); // Limpa o aviso se o servidor responder rápido
-        const d = await r.json();
-        // ... (restante da lógica de preenchimento)
-        addLog("Relatório Finalizado!", 100);
-    } catch (e) {
-        clearTimeout(waitTimer);
-        addLog("Erro na execução.", 0);
-    }
-}
+            try {
+                const r = await fetch('/api/processar', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({requisito: req, modelo: document.getElementById('modelo').value})
+                });
+                clearTimeout(waitTimer);
+                const d = await r.json();
+                dadosRaw = d;
+                document.getElementById('po').innerText = d.po;
+                document.getElementById('qa').innerText = d.qa;
+                document.getElementById('sizing').innerText = d.sizing;
+                document.getElementById('war').innerText = d.warroom;
+                addLog("Relatório Finalizado!", 100);
+                document.getElementById('btn-pdf').style.display = 'block';
+            } catch (e) { alert(e.message); } finally { document.getElementById('btn-gerar').disabled = false; }
+        }
 
         function exportarPDF() {
             document.getElementById('p-po').innerText = dadosRaw.po;
             document.getElementById('p-qa').innerText = dadosRaw.qa;
             document.getElementById('p-sz').innerText = dadosRaw.sizing;
-            document.getElementById('p-au').innerText = dadosRaw.auditoria;
             document.getElementById('p-wr').innerText = dadosRaw.warroom;
-
             const el = document.getElementById('pdf-template');
             el.style.display = 'block';
-            html2pdf().set({ margin: 15, filename: 'Relatorio_IA.pdf', jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } })
-                .from(el).save().then(() => el.style.display = 'none');
+            html2pdf().set({ margin: 15, filename: 'Relatorio_IA_3.0.pdf' }).from(el).save().then(() => el.style.display = 'none');
         }
 
         function verTab(e, id) {
