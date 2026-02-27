@@ -1,14 +1,22 @@
-// DOCUMENTAÇÃO OFICIAL 2.0 - DEFINIÇÃO DOS AGENTES
+// VERSÃO CONSOLIDADA 3.1 - REPOSITÓRIO DE PROMPTS MODULARIZADOS
 const agentes = {
-    po: (requisito) => `Aja como um Product Owner Sênior. Sua saída deve ser EXCLUSIVAMENTE o documento de Critérios de Aceite em formato Gherkin para o requisito: ${requisito}. Proibido saudações, explicações ou frases de polidez.`,
+    getRegra: (profundidade) => {
+        return {
+            curta: "Seja extremamente conciso, use bullets curtos e foque apenas no essencial (saída superficial).",
+            media: "Forneça um detalhamento intermediário, com explicações moderadas e estrutura padrão corporativa.",
+            longa: "Forneça uma resposta exaustiva, profunda e detalhada, explorando todos os cenários e exceções possíveis."
+        }[profundidade] || "";
+    },
 
-    qa: (textoPO) => `Aja como QA Analyst Sênior. Com base nos critérios fornecidos, gere APENAS o Plano de Testes detalhado com Steps, Entradas e Resultados Esperados para Testes de UI. Proibido qualquer texto introdutório. Documento: ${textoPO}`,
+    po: (req, prof) => `Aja como um Product Owner Sênior. Forneça EXCLUSIVAMENTE Critérios de Aceite Gherkin para: ${req}. ${agentes.getRegra(prof)} Proibido saudações ou polidez.`,
 
-    rm: (textoPO, textoQA) => `Aja como Release Manager. Produza EXCLUSIVAMENTE um Relatório Técnico de Release contendo: Sumário Executivo, Análise de Impacto em Produção e Notas de Versão (Release Notes). Sem introduções. Base: ${textoPO} e ${textoQA}`,
+    qa: (po, prof) => `Aja como QA Analyst Sênior. Gere APENAS Plano de Testes UI (Steps/Resultados) baseado em: ${po}. ${agentes.getRegra(prof)} Sem textos introdutórios.`,
 
-    sizing: (textoQA) => `Aja como Gerente de Sizing. Gere APENAS uma tabela de esforço contendo: Perfis Sugeridos, Horas por Fase e aplicação de governança (15% Gestão / 10% Buffer). Saída puramente técnica. Base: ${textoQA}`,
+    rm: (po, qa, prof) => `Aja como Release Manager. Produza EXCLUSIVAMENTE Relatório de Impacto e Release Notes. Base: ${po} e ${qa}. ${agentes.getRegra(prof)}`,
 
-    warroom: (textoPO, textoQA, textoSizing) => `Aja como Moderador de Comitê Técnico. Gere um diálogo estrito de 4 rodadas entre as áreas sobre Riscos de Regressão e Mitigação, finalizando com a Decisão de Deploy (GO/NO-GO). Base: ${textoPO}, ${textoQA} e ${textoSizing}`
+    sizing: (qa, prof) => `Aja como Gerente de Sizing. Gere APENAS tabela de esforço (Perfis, Horas, +15% Gestão, +10% Buffer). Base: ${qa}. ${agentes.getRegra(prof)}`,
+
+    warroom: (po, qa, sz, prof) => `Aja como Moderador Técnico. Gere diálogo de 4 falas sobre Riscos e Veredito GO/NO-GO. Base: ${po}, ${qa} e ${sz}. ${agentes.getRegra(prof)}`
 };
 
 module.exports = agentes;
