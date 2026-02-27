@@ -2,24 +2,20 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Sizing & Operação IA - Versão 3.1</title>
+    <title>Sizing & Operação IA - v3.1</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: auto; padding: 20px; background: #f8fafc; color: #1e293b; }
         .card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
         label { display: block; font-size: 11px; font-weight: bold; color: #64748b; margin-bottom: 5px; text-transform: uppercase; }
         .select-input, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-size: 15px; margin-bottom: 20px; }
-
         #status-box { display: none; background: #1e293b; color: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 20px; font-family: monospace; }
         .progress-container { background: #475569; height: 10px; border-radius: 5px; overflow: hidden; margin: 10px 0; }
         #progress-bar { width: 0%; background: #38bdf8; height: 100%; transition: width 0.5s; }
         .log-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
         .log-list li::before { content: "› "; color: #38bdf8; }
-
         .btn-main { background: #2563eb; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px; }
-        .btn-main:disabled { background: #94a3b8; }
         .btn-pdf { background: #10b981; color: white; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; display: none; margin-top: 10px; }
-
         .tabs { display: flex; margin-top: 30px; border-bottom: 2px solid #e2e8f0; gap: 5px; }
         .tab { padding: 12px 20px; cursor: pointer; border: none; background: #e2e8f0; font-weight: bold; border-radius: 8px 8px 0 0; color: #64748b; }
         .tab.active { background: white; color: #2563eb; border-bottom: 3px solid #2563eb; margin-bottom: -2px; }
@@ -29,20 +25,16 @@
     </style>
 </head>
 <body>
-
     <div class="card">
-        <h1 style="margin-top:0">🚀 Esteira de Agentes Operacionais</h1>
-
+        <h1>🚀 Esteira de Agentes Operacionais</h1>
         <label>Profundidade da Análise:</label>
         <select id="profundidade" class="select-input">
             <option value="curta">Resposta Curta (Superficial/Rápida)</option>
             <option value="media" selected>Resposta Média (Intermediária/Padrão)</option>
             <option value="longa">Resposta Longa (Profunda/Detalhada)</option>
         </select>
-
         <label>Requisito / Product Story:</label>
-        <textarea id="requisito" placeholder="Ex: Implementar login via SSO..."></textarea>
-
+        <textarea id="requisito" placeholder="Ex: Login via SSO..."></textarea>
         <div id="status-box">
             <div style="display:flex; justify-content:space-between; font-size:12px">
                 <span id="status-msg">Iniciando...</span>
@@ -51,9 +43,8 @@
             <div class="progress-container"><div id="progress-bar"></div></div>
             <ul id="log-list" class="log-list"></ul>
         </div>
-
         <button class="btn-main" id="btn-gerar" onclick="gerar()">Executar Esteira de Agentes</button>
-        <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório Consolidado</button>
+        <button class="btn-pdf" id="btn-pdf" onclick="exportarPDF()">📄 Exportar Relatório 3.1</button>
     </div>
 
     <div class="tabs">
@@ -61,50 +52,40 @@
         <button class="tab" onclick="verTab(event, 'qa')">QA</button>
         <button class="tab" onclick="verTab(event, 'rm')">Release</button>
         <button class="tab" onclick="verTab(event, 'sizing')">Sizing</button>
-        <button class="tab" onclick="verTab(event, 'war')">🔥 War Room</button>
+        <button class="tab" onclick="verTab(event, 'war')">War Room</button>
     </div>
 
-    <div id="po" class="content active">Aguardando processamento...</div>
+    <div id="po" class="content active">Aguardando...</div>
     <div id="qa" class="content">...</div>
     <div id="rm" class="content">...</div>
     <div id="sizing" class="content">...</div>
     <div id="war" class="content">...</div>
 
     <div id="pdf-template">
-        <h1 style="border-bottom: 2px solid #000">Relatório de Governança IA</h1>
-        <h3>PO - Critérios de Aceite</h3><div id="p-po"></div>
-        <h3>QA - Plano de Testes</h3><div id="p-qa"></div>
-        <h3>Relatório de Release</h3><div id="p-rm"></div>
-        <h3>Sizing e Estimativa</h3><div id="p-sz"></div>
-        <h3>Veredito War Room</h3><div id="p-wr"></div>
+        <h1 style="border-bottom: 2px solid #000">Relatório Operacional - v3.1</h1>
+        <div id="p-po"></div><div id="p-qa"></div><div id="p-sz"></div><div id="p-wr"></div>
     </div>
 
     <script>
         let dadosRaw = null;
-
         function addLog(msg, pct) {
             document.getElementById('status-box').style.display = 'block';
             document.getElementById('status-msg').innerText = msg;
             document.getElementById('status-pct').innerText = pct + '%';
             document.getElementById('progress-bar').style.width = pct + '%';
-            const li = document.createElement('li');
-            li.innerText = msg;
+            const li = document.createElement('li'); li.innerText = msg;
             document.getElementById('log-list').prepend(li);
         }
 
         async function gerar() {
             const req = document.getElementById('requisito').value;
             const prof = document.getElementById('profundidade').value;
-            if(!req) return alert("Por favor, descreva o requisito.");
-
+            if(!req) return alert("Insira o requisito!");
             document.getElementById('btn-gerar').disabled = true;
             document.getElementById('log-list').innerHTML = '';
-
             addLog(`Iniciando análise ${prof}...`, 10);
 
-            const longWait = setTimeout(() => {
-                addLog("⚙️ Etapa final (War Room) exige maior processamento. Aguarde...", 90);
-            }, 18000);
+            const waitTimer = setTimeout(() => addLog("⚙️ Processamento denso final. Aguarde...", 90), 18000);
 
             try {
                 const r = await fetch('/api/processar', {
@@ -112,23 +93,15 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ requisito: req, profundidade: prof })
                 });
-
-                clearTimeout(longWait);
+                clearTimeout(waitTimer);
                 const d = await r.json();
-                if(!r.ok) throw new Error(d.error);
-
                 dadosRaw = d;
-                document.getElementById('po').innerText = d.po;
-                document.getElementById('qa').innerText = d.qa;
-                document.getElementById('rm').innerText = d.rm;
-                document.getElementById('sizing').innerText = d.sizing;
+                document.getElementById('po').innerText = d.po; document.getElementById('qa').innerText = d.qa;
+                document.getElementById('rm').innerText = d.rm; document.getElementById('sizing').innerText = d.sizing;
                 document.getElementById('war').innerText = d.warroom;
-
-                addLog("Processamento finalizado!", 100);
+                addLog("Concluído!", 100);
                 document.getElementById('btn-pdf').style.display = 'block';
-
-            } catch (e) { alert("Erro: " + e.message); addLog("Falha na esteira.", 0); }
-            finally { document.getElementById('btn-gerar').disabled = false; }
+            } catch (e) { addLog("Erro no processamento.", 0); } finally { document.getElementById('btn-gerar').disabled = false; }
         }
 
         function exportarPDF() {
@@ -136,16 +109,14 @@
             document.getElementById('p-qa').innerText = dadosRaw.qa;
             document.getElementById('p-sz').innerText = dadosRaw.sizing;
             document.getElementById('p-wr').innerText = dadosRaw.warroom;
-            const el = document.getElementById('pdf-template');
-            el.style.display = 'block';
-            html2pdf().set({ margin: 15, filename: 'Relatorio_IA_V3_1.pdf' }).from(el).save().then(() => el.style.display = 'none');
+            const el = document.getElementById('pdf-template'); el.style.display = 'block';
+            html2pdf().set({ margin: 15, filename: 'Relatorio_v3_1.pdf' }).from(el).save().then(() => el.style.display = 'none');
         }
 
         function verTab(e, id) {
             document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            e.currentTarget.classList.add('active');
+            document.getElementById(id).classList.add('active'); e.currentTarget.classList.add('active');
         }
     </script>
 </body>
